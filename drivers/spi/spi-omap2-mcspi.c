@@ -655,7 +655,6 @@ static int omap2_mcspi_setup_transfer(struct spi_device *spi,
 	u32 l = 0, div = 0;
 	u8 word_len = spi->bits_per_word;
 	u32 speed_hz = spi->max_speed_hz;
-
 	mcspi = spi_master_get_devdata(spi->master);
 	spi_cntrl = mcspi->master;
 

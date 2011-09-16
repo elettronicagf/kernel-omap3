@@ -49,12 +49,50 @@
 #include <plat/usb.h>
 #include <plat/omap_device.h>
 #include <linux/gpio_spi.h>
-
 #include "mux.h"
 #include "hsmmc.h"
 #include "pm.h"
 #include "common-board-devices.h"
 #include "sdram-micron-mt46h32m32lf-6.h"
+#ifdef CONFIG_TOUCHSCREEN_SX8652
+#define	OMAP3_EGF_TS_GPIO 114
+#include <linux/spi/sx8652.h>
+#endif
+
+#if defined(CONFIG_TOUCHSCREEN_SX8652)
+
+static int sx8652_pendown_irq(void)
+{
+  return gpio_to_irq (OMAP3_EGF_TS_GPIO);
+}
+
+static int sx8652_pendown_state(void)
+{
+	return !gpio_get_value(OMAP3_EGF_TS_GPIO);
+}
+
+static struct sx8652_platform_data sx_info ={
+		.model				= 8652,
+		.x_min				= 150,
+		.x_max				= 3830,
+		.y_min				= 190,
+		.y_max				= 3830,
+		.x_plate_ohms		= 450,
+		.y_plate_ohms		= 250,
+		.pressure_max		= 15000,
+		.get_pendown_state	= sx8652_pendown_state,
+		.get_pendown_irq	= sx8652_pendown_irq,
+};
+
+static void __init egf_ts_init(void)
+{
+	int r;
+	omap_mux_init_gpio(OMAP3_EGF_TS_GPIO, OMAP_PIN_INPUT);
+	r = gpio_request_one(OMAP3_EGF_TS_GPIO, GPIOF_IN,"Pendown Ts Gpio");
+	if (r < 0)
+		printk(KERN_ERR "Unable to get Pendown IRQ GPIO\n");
+}
+#endif
 
 /* Lcd Pwm Backlight defines */
 
@@ -75,6 +113,16 @@ static struct spi_board_info  egf_gpio_spi[] = {
     .chip_select	= 0,
     .mode = SPI_MODE_0,
   },
+#if defined(CONFIG_TOUCHSCREEN_SX8652)
+  {
+    .modalias	= "sx8652",
+    .max_speed_hz	= 1000000, //1 MHz
+    .bus_num	= 1,
+    .chip_select	= 2,
+    .max_speed_hz = 125000*16,
+    .platform_data = &sx_info,
+  },
+#endif
 };
 
 /* DSS */
@@ -434,13 +482,12 @@ static void __init omap3_egf_init(void)
 	omap_sdrc_init(mt46h32m32lf6_sdrc_params,
 				  mt46h32m32lf6_sdrc_params);
 
-	omap_mux_init_gpio(170, OMAP_PIN_INPUT);
-	/* REVISIT leave DVI powered down until it's needed ... */
-	gpio_request_one(170, GPIOF_OUT_INIT_HIGH, "DVI_nPD");
-
 	usb_musb_init(NULL);
 	usbhs_init(&usbhs_bdata);
 	egf_display_init();
+#if defined(CONFIG_TOUCHSCREEN_SX8652)
+	egf_ts_init();
+#endif
 	egf_opp_init();
 }
 
