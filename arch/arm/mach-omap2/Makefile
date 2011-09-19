@@ -187,17 +187,31 @@ obj-$(CONFIG_MACH_OMAP_GENERIC)		+= board-generic.o
 obj-$(CONFIG_MACH_OMAP_H4)		+= board-h4.o
 obj-$(CONFIG_MACH_OMAP_2430SDP)		+= board-2430sdp.o
 obj-$(CONFIG_MACH_OMAP_APOLLON)		+= board-apollon.o
-obj-$(CONFIG_MACH_OMAP3_BEAGLE)		+= board-omap3beagle.o
-obj-$(CONFIG_MACH_DEVKIT8000)     	+= board-devkit8000.o
-obj-$(CONFIG_MACH_OMAP_LDP)		+= board-ldp.o
-obj-$(CONFIG_MACH_OMAP3530_LV_SOM)      += board-omap3logic.o
-obj-$(CONFIG_MACH_OMAP3_TORPEDO)        += board-omap3logic.o
-obj-$(CONFIG_MACH_ENCORE)		+= board-omap3encore.o
-obj-$(CONFIG_MACH_ENCORE)		+= board-omap3encore.o
-obj-$(CONFIG_MACH_OVERO)		+= board-overo.o
-obj-$(CONFIG_MACH_OMAP3EVM)		+= board-omap3evm.o
-obj-$(CONFIG_MACH_OMAP3_PANDORA)	+= board-omap3pandora.o
-obj-$(CONFIG_MACH_OMAP_3430SDP)		+= board-3430sdp.o
+obj-$(CONFIG_MACH_OMAP3_BEAGLE)		+= board-omap3beagle.o \
+					   hsmmc.o
+obj-$(CONFIG_MACH_OMAP3_EGF)		+= board-omap3egf.o \
+					   hsmmc.o \
+					   omap_phy_internal.o
+obj-$(CONFIG_MACH_DEVKIT8000)     	+= board-devkit8000.o \
+                                           hsmmc.o
+obj-$(CONFIG_MACH_OMAP_LDP)		+= board-ldp.o \
+					   board-flash.o \
+					   hsmmc.o
+obj-$(CONFIG_MACH_OMAP3530_LV_SOM)      += board-omap3logic.o \
+					   hsmmc.o
+obj-$(CONFIG_MACH_OMAP3_TORPEDO)        += board-omap3logic.o \
+					   hsmmc.o
+obj-$(CONFIG_MACH_ENCORE)		+= board-omap3encore.o \
+					   hsmmc.o
+obj-$(CONFIG_MACH_OVERO)		+= board-overo.o \
+					   hsmmc.o
+obj-$(CONFIG_MACH_OMAP3EVM)		+= board-omap3evm.o \
+					   hsmmc.o
+obj-$(CONFIG_MACH_OMAP3_PANDORA)	+= board-omap3pandora.o \
+					   hsmmc.o
+obj-$(CONFIG_MACH_OMAP_3430SDP)		+= board-3430sdp.o \
+					   hsmmc.o \
+					   board-flash.o
 obj-$(CONFIG_MACH_NOKIA_N8X0)		+= board-n8x0.o
 obj-$(CONFIG_MACH_NOKIA_RM680)		+= board-rm680.o \
 					   sdram-nokia.o

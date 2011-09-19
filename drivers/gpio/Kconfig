@@ -487,4 +487,12 @@ config GPIO_TPS65910
 	help
 	  Select this option to enable GPIO driver for the TPS65910
 	  chip family.
+
+config GPIO_SPI
+	tristate "Elettronica GF CPLD Based SPI GPIO Expander"
+	depends on SPI_MASTER
+	help
+	  CPLD Driver for Elettronica GF SOM 336.  This provides
+	  a GPIO interface supporting inputs and outputs.
+		
 endif
