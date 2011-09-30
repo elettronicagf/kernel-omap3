@@ -327,7 +327,7 @@ static int video_mode_to_dss_mode(struct omap_vout_device *vout)
 	struct omap_overlay *ovl;
 	struct omapvideo_info *ovid;
 	struct v4l2_pix_format *pix = &vout->pix;
-	enum omap_color_mode mode;
+	enum omap_color_mode mode= -EINVAL;
 
 	ovid = &vout->vid_info;
 	ovl = ovid->overlays[0];
@@ -2133,7 +2133,7 @@ static int omap_vout_remove(struct platform_device *pdev)
 	return 0;
 }
 
-static int __init omap_vout_probe(struct platform_device *pdev)
+static int omap_vout_probe(struct platform_device *pdev)
 {
 	int ret = 0, i;
 	struct omap_overlay *ovl;
@@ -2193,19 +2193,6 @@ static int __init omap_vout_probe(struct platform_device *pdev)
 				dev_warn(&pdev->dev,
 					"'%s' Display already enabled\n",
 					def_display->name);
-			}
-			/* set the update mode */
-			if (def_display->caps &
-					OMAP_DSS_DISPLAY_CAP_MANUAL_UPDATE) {
-				if (dssdrv->enable_te)
-					dssdrv->enable_te(def_display, 0);
-				if (dssdrv->set_update_mode)
-					dssdrv->set_update_mode(def_display,
-							OMAP_DSS_UPDATE_MANUAL);
-			} else {
-				if (dssdrv->set_update_mode)
-					dssdrv->set_update_mode(def_display,
-							OMAP_DSS_UPDATE_AUTO);
 			}
 		}
 	}

@@ -122,8 +122,14 @@ enum {
 	/* Other via devs could use 3314, 3324, 3327, 3336, 3364, 3353 */
 	V4L2_IDENT_VIA_VX855 = 3409,
 
+	/* module tvp514x */
+	V4L2_IDENT_TVP5146 = 5146,
+
 	/* module tvp5150 */
 	V4L2_IDENT_TVP5150 = 5150,
+
+	/* module tvp5151 */
+	V4L2_IDENT_TVP5151 = 5151,
 
 	/* module saa5246a: just ident 5246 */
 	V4L2_IDENT_SAA5246A = 5246,

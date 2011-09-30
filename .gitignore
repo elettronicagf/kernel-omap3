@@ -12,6 +12,10 @@
 .*
 *.o
 *.o.*
+*.BASE.*
+*.LOCAL.*
+*.REMOTE.*
+*.BACKUP.*
 *.a
 *.s
 *.ko

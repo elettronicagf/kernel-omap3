@@ -29,6 +29,9 @@
 #ifndef _TVP514X_H
 #define _TVP514X_H
 
+#include <media/v4l2-subdev.h>
+#include <media/media-entity.h>
+
 /*
  * Other macros
  */
@@ -104,6 +107,7 @@ enum tvp514x_output {
  * @ vs_polarity: VSYNC Polarity configuration for current interface.
  */
 struct tvp514x_platform_data {
+    int (*s_power) (struct v4l2_subdev *subdev, u32 on);
 	/* Interface control params */
 	bool clk_polarity;
 	bool hs_polarity;

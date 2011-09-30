@@ -54,12 +54,122 @@
 #include "pm.h"
 #include "common-board-devices.h"
 #include "sdram-micron-mt46h32m32lf-6.h"
+
+#define OMAP3_EGF_DISPLAY_ENABLE_GPIO			213
+
 #ifdef CONFIG_TOUCHSCREEN_SX8652
 #define	OMAP3_EGF_TS_GPIO 114
 #include <linux/spi/sx8652.h>
 #endif
 #include <linux/i2c/at24.h>
 #define EEPROM_I2C_ADDR 0x50
+
+#ifdef CONFIG_VIDEO_TVP515X
+#define TVP5150_I2C_BUS_NUM		2
+#define OMAP3_EGF_TVP5150_NRESET_GPIO		164
+#define OMAP3_EGF_TVP5150_ENABLE_GPIO		163
+
+#include <media/tvp515x.h>
+#include <../drivers/media/video/isp/isp.h>
+#include "devices.h"
+#endif
+
+#ifdef CONFIG_VIDEO_TVP515X_SOM336_INPUT_SELECTOR
+#define OMAP3_EGF_TVP5150_INPUT_SEL_GPIO	138
+#endif
+
+
+
+#ifdef CONFIG_VIDEO_TVP515X
+static int egf_tvp515x_s_power(struct v4l2_subdev *subdev, u32 on)
+{
+	gpio_set_value(OMAP3_EGF_TVP5150_ENABLE_GPIO, on);
+	return 0;
+}
+/* TVP5150: Video Decoder */
+static struct tvp515x_platform_data egf_tvp515x_platform_data = {
+	.s_power		= egf_tvp515x_s_power,
+};
+static struct i2c_board_info egf_camera_i2c_devices[] = {
+	{
+		I2C_BOARD_INFO("tvp5151", 0x5C),
+		.platform_data	= &egf_tvp515x_platform_data,
+	},
+};
+
+
+static struct isp_subdev_i2c_board_info egf_tvp5150_subdevs[] = {
+	{
+		.board_info	= &egf_camera_i2c_devices[0],
+		.i2c_adapter_id	= TVP5150_I2C_BUS_NUM,
+	},
+	{ NULL, 0 },
+};
+
+static struct isp_v4l2_subdevs_group egf_camera_subdevs[] = {
+	{
+		.subdevs	= egf_tvp5150_subdevs,
+		.interface	= ISP_INTERFACE_PARALLEL,
+		.bus		= {
+			.parallel	= {
+				.width			= 8,
+				.data_lane_shift	= 0,
+				.clk_pol		= 0,
+				.hdpol			= 0,
+				.vdpol			= 1,
+				.fldmode		= 1,
+				.bridge			= 0,
+				.is_bt656		= 1,
+			},
+		},
+	},
+	{ NULL, 0 },
+};
+
+static struct isp_platform_data egf_isp_platform_data = {
+	.subdevs = egf_camera_subdevs,
+};
+
+static int __init egf_cam_init(void)
+{
+	int ret = 0;
+#ifdef CONFIG_VIDEO_TVP515X_SOM336_INPUT_SELECTOR
+	omap_mux_init_gpio(OMAP3_EGF_TVP5150_INPUT_SEL_GPIO, OMAP_PIN_OUTPUT);
+#endif
+	omap_mux_init_gpio(OMAP3_EGF_TVP5150_NRESET_GPIO, OMAP_PIN_INPUT_PULLUP);
+	omap_mux_init_gpio(OMAP3_EGF_TVP5150_ENABLE_GPIO, OMAP_PIN_INPUT_PULLUP);
+
+
+	/* Force tvp5150 nreset to 1 */
+	ret = gpio_request(OMAP3_EGF_TVP5150_NRESET_GPIO, "tvp5150_nreset");
+	if (ret) {
+		printk(KERN_ERR "failed to get tvp5150_nreset\n");
+		goto err_1;
+	}
+	gpio_direction_output(OMAP3_EGF_TVP5150_NRESET_GPIO, 1);
+
+	/* Initialize tvp5150 enable to 0 */
+	ret = gpio_request(OMAP3_EGF_TVP5150_ENABLE_GPIO, "tvp5150_enable");
+	if (ret) {
+		printk(KERN_ERR "failed to get tvp5150_enable\n");
+		goto err_2;
+	}
+	/* TVP5150 should be on or is not detected at probing level */
+	gpio_direction_output(OMAP3_EGF_TVP5150_ENABLE_GPIO, 1);
+
+	omap3_init_camera(&egf_isp_platform_data);
+	printk(KERN_INFO "egf camera init done successfully...\n");
+	return 0;
+err_2:
+	gpio_free(OMAP3_EGF_TVP5150_NRESET_GPIO);
+err_1:
+	return ret;
+}
+
+
+
+#endif
+
 
 #if defined(CONFIG_TOUCHSCREEN_SX8652)
 
@@ -216,8 +326,7 @@ static struct omap_dss_device egf_dvi_device = {
 	.driver_name = "generic_dpi_panel",
 	.data = &dvi_panel,
 	.phy.dpi.data_lines = 24,
-	.reset_gpio=-EINVAL,
-	//.reset_gpio=213,
+	.reset_gpio = OMAP3_EGF_DISPLAY_ENABLE_GPIO,
 };
 
 static struct omap_dss_device egf_lcd_device = {
@@ -228,9 +337,9 @@ static struct omap_dss_device egf_lcd_device = {
 	.platform_enable = egf_enable_lcd,
 	.platform_disable = egf_disable_lcd,
 	//.reset_gpio=213,
-	.max_backlight_level=100,
-	.set_backlight=lcd_set_backlight,
-	.reset_gpio=-EINVAL,
+	.max_backlight_level = 100,
+	.set_backlight = lcd_set_backlight,
+	.reset_gpio = OMAP3_EGF_DISPLAY_ENABLE_GPIO,
 };
 
 static struct omap_dss_device egf_tv_device = {
@@ -495,6 +604,10 @@ static void __init omap3_egf_init(void)
 	usb_musb_init(NULL);
 	usbhs_init(&usbhs_bdata);
 	egf_display_init();
+
+#ifdef CONFIG_VIDEO_TVP515X
+	egf_cam_init();
+#endif
 #if defined(CONFIG_TOUCHSCREEN_SX8652)
 	egf_ts_init();
 #endif
