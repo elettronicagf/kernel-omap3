@@ -58,6 +58,8 @@
 #define	OMAP3_EGF_TS_GPIO 114
 #include <linux/spi/sx8652.h>
 #endif
+#include <linux/i2c/at24.h>
+#define EEPROM_I2C_ADDR 0x50
 
 #if defined(CONFIG_TOUCHSCREEN_SX8652)
 
@@ -382,9 +384,17 @@ static struct twl4030_platform_data egf_twldata = {
 	.vsim		= &egf_vsim,
 };
 
+static struct at24_platform_data at24c64 = {
+     .byte_len       = SZ_64K / 8,
+     .flags			 = AT24_FLAG_ADDR16,
+     .page_size      = 32,
+};
+
+
 static struct i2c_board_info __initdata egf_i2c_eeprom[] = {
        {
-               I2C_BOARD_INFO("24c64", 0x50),
+               I2C_BOARD_INFO("24c64", EEPROM_I2C_ADDR),
+               .platform_data  = &at24c64,
        },
 };
 static int __init omap3_egf_i2c_init(void)
