@@ -62,7 +62,8 @@
 #include <linux/spi/sx8652.h>
 #endif
 #include <linux/i2c/at24.h>
-#define EEPROM_I2C_ADDR 0x50
+#define EEPROM_ON_MODULE_I2C_ADDR 0x50
+#define EEPROM_ON_BOARD_I2C_ADDR  0x56
 
 #ifdef CONFIG_VIDEO_TVP515X
 #define TVP5150_I2C_BUS_NUM		2
@@ -492,7 +493,7 @@ static struct twl4030_platform_data egf_twldata = {
 	.vmmc2		= &egf_vmmc2,
 	.vsim		= &egf_vsim,
 };
-
+/* EEprom on SOM336 */
 static struct at24_platform_data at24c64 = {
      .byte_len       = SZ_64K / 8,
      .flags			 = AT24_FLAG_ADDR16,
@@ -500,12 +501,27 @@ static struct at24_platform_data at24c64 = {
 };
 
 
-static struct i2c_board_info __initdata egf_i2c_eeprom[] = {
+static struct i2c_board_info __initdata egf_i2c_eeprom_on_module[] = {
        {
-               I2C_BOARD_INFO("24c64", EEPROM_I2C_ADDR),
+               I2C_BOARD_INFO("24c64", EEPROM_ON_MODULE_I2C_ADDR),
                .platform_data  = &at24c64,
        },
 };
+
+/* EEprom on JSF0377 */
+//static struct at24_platform_data at24c04 = {
+//     .byte_len       = SZ_4K / 8,
+//     .page_size      = 16,
+//};
+
+
+static struct i2c_board_info __initdata egf_i2c_eeprom_on_board[] = {
+       {
+               I2C_BOARD_INFO("24c04", EEPROM_ON_BOARD_I2C_ADDR),
+//               .platform_data  = &at24c04,
+       },
+};
+
 static int __init omap3_egf_i2c_init(void)
 {
 
@@ -514,7 +530,8 @@ static int __init omap3_egf_i2c_init(void)
 			TWL_COMMON_REGULATOR_VDAC | TWL_COMMON_REGULATOR_VPLL2);
 	egf_twldata.vpll2->constraints.name = "VDVI";
 	omap3_pmic_init("twl4030", &egf_twldata);
-	omap_register_i2c_bus(2, 100, egf_i2c_eeprom, ARRAY_SIZE(egf_i2c_eeprom));
+	omap_register_i2c_bus(2, 400, egf_i2c_eeprom_on_module, ARRAY_SIZE(egf_i2c_eeprom_on_module));
+	omap_register_i2c_bus(3, 400, egf_i2c_eeprom_on_board, ARRAY_SIZE(egf_i2c_eeprom_on_board));
 	omap_register_i2c_bus(3, 100, NULL, 0);
 	return 0;
 }
