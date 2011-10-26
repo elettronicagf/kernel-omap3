@@ -969,22 +969,14 @@ static void ccdc_config_sync_if(struct isp_ccdc_device *ccdc,
 	u32 syn_mode = isp_reg_readl(isp, OMAP3_ISP_IOMEM_CCDC,
 				     ISPCCDC_SYN_MODE);
 
-	syn_mode &= ~(ISPCCDC_SYN_MODE_VDHDOUT |
-			ISPCCDC_SYN_MODE_FLDOUT |
-			ISPCCDC_SYN_MODE_VDPOL |
-			ISPCCDC_SYN_MODE_HDPOL |
-			ISPCCDC_SYN_MODE_FLDPOL |
-			ISPCCDC_SYN_MODE_FLDMODE |
-			ISPCCDC_SYN_MODE_DATAPOL |
-			ISPCCDC_SYN_MODE_DATSIZ_MASK |
-			ISPCCDC_SYN_MODE_PACK8 |
-			ISPCCDC_SYN_MODE_INPMOD_MASK);
-
 	syn_mode |= ISPCCDC_SYN_MODE_VDHDEN;
 
 	if (syncif->fldstat)
 		syn_mode |= ISPCCDC_SYN_MODE_FLDSTAT;
+	else
+		syn_mode &= ~ISPCCDC_SYN_MODE_FLDSTAT;
 
+	syn_mode &= ~ISPCCDC_SYN_MODE_DATSIZ_MASK;
 	switch (syncif->datsz) {
 	case 8:
 		syn_mode |= ISPCCDC_SYN_MODE_DATSIZ_8;
@@ -1002,21 +994,34 @@ static void ccdc_config_sync_if(struct isp_ccdc_device *ccdc,
 
 	if (syncif->fldmode)
 		syn_mode |= ISPCCDC_SYN_MODE_FLDMODE;
+	else
+		syn_mode &= ~ISPCCDC_SYN_MODE_FLDMODE;
 
 	if (syncif->datapol)
 		syn_mode |= ISPCCDC_SYN_MODE_DATAPOL;
+	else
+		syn_mode &= ~ISPCCDC_SYN_MODE_DATAPOL;
 
 	if (syncif->fldpol)
 		syn_mode |= ISPCCDC_SYN_MODE_FLDPOL;
+	else
+		syn_mode &= ~ISPCCDC_SYN_MODE_FLDPOL;
 
 	if (syncif->hdpol)
 		syn_mode |= ISPCCDC_SYN_MODE_HDPOL;
+	else
+		syn_mode &= ~ISPCCDC_SYN_MODE_HDPOL;
 
 	if (syncif->vdpol)
 		syn_mode |= ISPCCDC_SYN_MODE_VDPOL;
+	else
+		syn_mode &= ~ISPCCDC_SYN_MODE_VDPOL;
 
 	if (syncif->bt_r656_en)
 		syn_mode |= ISPCCDC_SYN_MODE_PACK8;
+	else
+		syn_mode &= ~ISPCCDC_SYN_MODE_PACK8;
+
 
 	if (syncif->ccdc_mastermode) {
 		syn_mode |= ISPCCDC_SYN_MODE_FLDOUT | ISPCCDC_SYN_MODE_VDHDOUT;
@@ -1031,15 +1036,17 @@ static void ccdc_config_sync_if(struct isp_ccdc_device *ccdc,
 			     | syncif->hlprf << ISPCCDC_PIX_LINES_HLPRF_SHIFT,
 			       OMAP3_ISP_IOMEM_CCDC,
 			       ISPCCDC_PIX_LINES);
-	}
+	} else
+		syn_mode &= ~(ISPCCDC_SYN_MODE_FLDOUT |
+			      ISPCCDC_SYN_MODE_VDHDOUT);
 
 	isp_reg_writel(isp, syn_mode, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_SYN_MODE);
 
-	if (syncif->bt_r656_en)
-		isp_reg_set(isp, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_REC656IF,
+	if (!syncif->bt_r656_en)
+		isp_reg_clr(isp, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_REC656IF,
 			    ISPCCDC_REC656IF_R656ON | ISPCCDC_REC656IF_ECCFVH);
 	else
-		isp_reg_clr(isp, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_REC656IF,
+		isp_reg_set(isp, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_REC656IF,
 			    ISPCCDC_REC656IF_R656ON | ISPCCDC_REC656IF_ECCFVH);
 }
 
@@ -1149,6 +1156,9 @@ static void ccdc_configure(struct isp_ccdc_device *ccdc)
 
 	ccdc_config_sync_if(ccdc, &ccdc->syncif);
 
+	/* CCDC_PAD_SINK */
+	format = &ccdc->formats[CCDC_PAD_SINK];
+
 	syn_mode = isp_reg_readl(isp, OMAP3_ISP_IOMEM_CCDC, ISPCCDC_SYN_MODE);
 
 	/* Use the raw, unprocessed data when writing to memory. The H3A and
@@ -1166,8 +1176,6 @@ static void ccdc_configure(struct isp_ccdc_device *ccdc)
 	else
 		syn_mode &= ~ISPCCDC_SYN_MODE_SDR2RSZ;
 
-	/* CCDC_PAD_SINK */
-	format = &ccdc->formats[CCDC_PAD_SINK];
 
 	if ((format->code == V4L2_MBUS_FMT_YUYV8_2X8) ||
 			(format->code == V4L2_MBUS_FMT_UYVY8_2X8)) {

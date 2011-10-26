@@ -136,11 +136,6 @@ static struct platform_device *encore_devices[] __initdata = {
 	&encore_keys_gpio,
 };
 
-static void __init omap_encore_init_early(void)
-{
-	omap2_init_common_infrastructure();
-}
-
 static struct twl4030_usb_data encore_usb_data = {
 	.usb_mode	= T2_USB_MODE_ULPI,
 };
@@ -340,7 +335,7 @@ static void __init omap_encore_init(void)
 MACHINE_START(ENCORE, "encore")
 	.reserve	= omap_reserve,
 	.map_io		= omap3_map_io,
-	.init_early	= omap_encore_init_early,
+	.init_early	= omap3630_init_early,
 	.init_irq	= omap3_init_irq,
 	.init_machine	= omap_encore_init,
 	.timer		= &omap3_timer,

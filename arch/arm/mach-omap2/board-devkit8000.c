@@ -226,7 +226,6 @@ static int devkit8000_twl_gpio_setup(struct device *dev,
 {
 	int ret;
 
-	omap_mux_init_gpio(29, OMAP_PIN_INPUT);
 	/* gpio + 0 is "mmc0_cd" (input/IRQ) */
 	mmc[0].gpio_cd = gpio + 0;
 	omap2_hsmmc_init(mmc);
@@ -396,11 +395,6 @@ static struct platform_device keys_gpio = {
 		.platform_data	= &gpio_key_info,
 	},
 };
-
-static void __init devkit8000_init_irq(void)
-{
-	omap3_init_irq();
-}
 
 #define OMAP_DM9000_BASE	0x2c000000
 
@@ -665,7 +659,7 @@ MACHINE_START(DEVKIT8000, "OMAP3 Devkit8000")
 	.reserve	= omap_reserve,
 	.map_io		= omap3_map_io,
 	.init_early	= omap35xx_init_early,
-	.init_irq	= devkit8000_init_irq,
+	.init_irq	= omap3_init_irq,
 	.init_machine	= devkit8000_init,
 	.timer		= &omap3_secure_timer,
 MACHINE_END

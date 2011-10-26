@@ -83,11 +83,6 @@ static struct platform_device leds_gpio = {
 	},
 };
 
-static void __init pcm049_init_early(void)
-{
-	omap2_init_common_infrastructure();
-}
-
 static const struct usbhs_omap_board_data usbhs_bdata __initconst = {
 	.port_mode[0] = OMAP_EHCI_PORT_MODE_PHY,
 	.port_mode[1] = OMAP_USBHS_PORT_MODE_UNUSED,
@@ -580,7 +575,7 @@ MACHINE_START(PCM049, "phyCORE OMAP4")
 	/* Maintainer: Jan Weitzel - Phytec Messtechnik GmbH */
 	.reserve	= omap_reserve,
 	.map_io		= pcm049_map_io,
-	.init_early	= pcm049_init_early,
+	.init_early	= omap4430_init_early,
 	.init_irq	= gic_init_irq,
 	.init_machine	= pcm049_init,
 	.timer		= &omap4_timer,
