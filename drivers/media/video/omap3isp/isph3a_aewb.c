@@ -264,12 +264,12 @@ static long isph3a_aewb_ioctl(struct v4l2_subdev *sd, unsigned int cmd,
 
 	switch (cmd) {
 	case VIDIOC_OMAP3ISP_AEWB_CFG:
-		return ispstat_config(stat, arg);
+		return omap3isp_stat_config(stat, arg);
 	case VIDIOC_OMAP3ISP_STAT_REQ:
-		return ispstat_request_statistics(stat, arg);
+		return omap3isp_stat_request_statistics(stat, arg);
 	case VIDIOC_OMAP3ISP_STAT_EN: {
 		unsigned long *en = arg;
-		return ispstat_enable(stat, !!*en);
+		return omap3isp_stat_enable(stat, !!*en);
 	}
 	}
 
@@ -286,12 +286,12 @@ static const struct ispstat_ops isph3a_aewb_ops = {
 
 static const struct v4l2_subdev_core_ops isph3a_aewb_subdev_core_ops = {
 	.ioctl = isph3a_aewb_ioctl,
-	.subscribe_event = ispstat_subscribe_event,
-	.unsubscribe_event = ispstat_unsubscribe_event,
+	.subscribe_event = omap3isp_stat_subscribe_event,
+	.unsubscribe_event = omap3isp_stat_unsubscribe_event,
 };
 
 static const struct v4l2_subdev_video_ops isph3a_aewb_subdev_video_ops = {
-	.s_stream = ispstat_s_stream,
+	.s_stream = omap3isp_stat_s_stream,
 };
 
 static const struct v4l2_subdev_ops isph3a_aewb_subdev_ops = {
@@ -350,7 +350,7 @@ int isp_h3a_aewb_init(struct isp_device *isp)
 	aewb_recover_cfg->buf_size = isph3a_aewb_get_buf_size(aewb_recover_cfg);
 	aewb->recover_priv = aewb_recover_cfg;
 
-	ret = ispstat_init(aewb, "AEWB", &isph3a_aewb_subdev_ops);
+	ret = omap3isp_stat_init(aewb, "AEWB", &isph3a_aewb_subdev_ops);
 	if (ret)
 		goto err_conf;
 
@@ -371,5 +371,5 @@ void isp_h3a_aewb_cleanup(struct isp_device *isp)
 {
 	kfree(isp->isp_aewb.priv);
 	kfree(isp->isp_aewb.recover_priv);
-	ispstat_free(&isp->isp_aewb);
+	omap3isp_stat_free(&isp->isp_aewb);
 }

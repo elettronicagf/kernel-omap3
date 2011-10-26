@@ -327,12 +327,12 @@ static long isph3a_af_ioctl(struct v4l2_subdev *sd, unsigned int cmd, void *arg)
 
 	switch (cmd) {
 	case VIDIOC_OMAP3ISP_AF_CFG:
-		return ispstat_config(stat, arg);
+		return omap3isp_stat_config(stat, arg);
 	case VIDIOC_OMAP3ISP_STAT_REQ:
-		return ispstat_request_statistics(stat, arg);
+		return omap3isp_stat_request_statistics(stat, arg);
 	case VIDIOC_OMAP3ISP_STAT_EN: {
 		int *en = arg;
-		return ispstat_enable(stat, !!*en);
+		return omap3isp_stat_enable(stat, !!*en);
 	}
 	}
 
@@ -350,12 +350,12 @@ static const struct ispstat_ops isph3a_af_ops = {
 
 static const struct v4l2_subdev_core_ops isph3a_af_subdev_core_ops = {
 	.ioctl = isph3a_af_ioctl,
-	.subscribe_event = ispstat_subscribe_event,
-	.unsubscribe_event = ispstat_unsubscribe_event,
+	.subscribe_event = omap3isp_stat_subscribe_event,
+	.unsubscribe_event = omap3isp_stat_unsubscribe_event,
 };
 
 static const struct v4l2_subdev_video_ops isph3a_af_subdev_video_ops = {
-	.s_stream = ispstat_s_stream,
+	.s_stream = omap3isp_stat_s_stream,
 };
 
 static const struct v4l2_subdev_ops isph3a_af_subdev_ops = {
@@ -407,7 +407,7 @@ int isp_h3a_af_init(struct isp_device *isp)
 	af_recover_cfg->buf_size = isph3a_af_get_buf_size(af_recover_cfg);
 	af->recover_priv = af_recover_cfg;
 
-	ret = ispstat_init(af, "AF", &isph3a_af_subdev_ops);
+	ret = omap3isp_stat_init(af, "AF", &isph3a_af_subdev_ops);
 	if (ret)
 		goto err_conf;
 
@@ -425,5 +425,5 @@ void isp_h3a_af_cleanup(struct isp_device *isp)
 {
 	kfree(isp->isp_af.priv);
 	kfree(isp->isp_af.recover_priv);
-	ispstat_free(&isp->isp_af);
+	omap3isp_stat_free(&isp->isp_af);
 }

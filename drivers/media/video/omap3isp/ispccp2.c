@@ -531,7 +531,7 @@ static void ispccp2_isr_buffer(struct isp_ccp2_device *ccp2)
 	struct isp_pipeline *pipe = to_isp_pipeline(&ccp2->subdev.entity);
 	struct isp_buffer *buffer;
 
-	buffer = isp_video_buffer_next(&ccp2->video_in, ccp2->error);
+	buffer = omap3isp_video_buffer_next(&ccp2->video_in, ccp2->error);
 	if (buffer != NULL)
 		ispccp2_set_inaddr(ccp2, buffer->isp_addr);
 
@@ -539,7 +539,7 @@ static void ispccp2_isr_buffer(struct isp_ccp2_device *ccp2)
 
 	if (ccp2->state == ISP_PIPELINE_STREAM_SINGLESHOT) {
 		if (isp_pipeline_ready(pipe))
-			isp_pipeline_set_stream(pipe,
+			omap3isp_pipeline_set_stream(pipe,
 						ISP_PIPELINE_STREAM_SINGLESHOT);
 	}
 
@@ -590,7 +590,7 @@ int ispccp2_isr(struct isp_ccp2_device *ccp2)
 		ret = -EIO;
 	}
 
-	if (isp_module_sync_is_stopping(&ccp2->wait, &ccp2->stopping))
+	if (omap3isp_module_sync_is_stopping(&ccp2->wait, &ccp2->stopping))
 		return 0;
 
 	/* Frame number propagation */
@@ -873,19 +873,19 @@ static int ispccp2_s_stream(struct v4l2_subdev *sd, int enable)
 			ccp2->mem_cfg.src_ofst = 0;
 
 			ispccp2_mem_configure(ccp2, &ccp2->mem_cfg);
-			isp_sbl_enable(isp, OMAP3_ISP_SBL_CSI1_READ);
+			omap3isp_sbl_enable(isp, OMAP3_ISP_SBL_CSI1_READ);
 			ispccp2_print_status(ccp2);
 		}
 		ispccp2_mem_enable(ccp2, 1);
 		break;
 
 	case ISP_PIPELINE_STREAM_STOPPED:
-		if (isp_module_sync_idle(&sd->entity, &ccp2->wait,
+		if (omap3isp_module_sync_idle(&sd->entity, &ccp2->wait,
 					 &ccp2->stopping))
 			dev_dbg(dev, "%s: module stop timeout.\n", sd->name);
 		if (ccp2->input == CCP2_INPUT_MEMORY) {
 			ispccp2_mem_enable(ccp2, 0);
-			isp_sbl_disable(isp, OMAP3_ISP_SBL_CSI1_READ);
+			omap3isp_sbl_disable(isp, OMAP3_ISP_SBL_CSI1_READ);
 		} else if (ccp2->input == CCP2_INPUT_SENSOR) {
 			/* Disable CSI1/CCP2 interface */
 			ispccp2_if_enable(ccp2, 0);
@@ -1062,7 +1062,7 @@ static int isp_ccp2_init_entities(struct isp_ccp2_device *ccp2)
 	ccp2->video_in.ops = &ispccp2_video_ops;
 	ccp2->video_in.capture_mem = PAGE_ALIGN(4096 * 4096) * 3;
 
-	ret = isp_video_init(&ccp2->video_in, "CCP2");
+	ret = omap3isp_video_init(&ccp2->video_in, "CCP2");
 	if (ret < 0)
 		return ret;
 
@@ -1085,7 +1085,7 @@ void isp_ccp2_unregister_entities(struct isp_ccp2_device *ccp2)
 
 	v4l2_device_unregister_subdev(&ccp2->subdev);
 	v4l2_ctrl_handler_free(&ccp2->ctrls);
-	isp_video_unregister(&ccp2->video_in);
+	omap3isp_video_unregister(&ccp2->video_in);
 }
 
 /*
@@ -1105,7 +1105,7 @@ int isp_ccp2_register_entities(struct isp_ccp2_device *ccp2,
 	if (ret < 0)
 		goto error;
 
-	ret = isp_video_register(&ccp2->video_in, vdev);
+	ret = omap3isp_video_register(&ccp2->video_in, vdev);
 	if (ret < 0)
 		goto error;
 

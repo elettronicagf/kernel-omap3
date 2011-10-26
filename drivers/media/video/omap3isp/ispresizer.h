@@ -129,21 +129,21 @@ struct isp_res_device {
 
 struct isp_device;
 
-int isp_resizer_init(struct isp_device *isp);
-void isp_resizer_cleanup(struct isp_device *isp);
+int omap3isp_resizer_init(struct isp_device *isp);
+void omap3isp_resizer_cleanup(struct isp_device *isp);
 
-int isp_resizer_register_entities(struct isp_res_device *res,
+int omap3isp_resizer_register_entities(struct isp_res_device *res,
 				  struct v4l2_device *vdev);
-void isp_resizer_unregister_entities(struct isp_res_device *res);
-void ispresizer_isr_frame_sync(struct isp_res_device *res);
-void ispresizer_isr(struct isp_res_device *isp_res);
+void omap3isp_resizer_unregister_entities(struct isp_res_device *res);
+void omap3isp_resizer_isr_frame_sync(struct isp_res_device *res);
+void omap3isp_resizer_isr(struct isp_res_device *isp_res);
 
-void ispresizer_max_rate(struct isp_res_device *res, unsigned int *max_rate);
+void omap3isp_resizer_max_rate(struct isp_res_device *res, unsigned int *max_rate);
 
-void ispresizer_suspend(struct isp_res_device *isp_res);
+void omap3ispresizer_suspend(struct isp_res_device *isp_res);
 
-void ispresizer_resume(struct isp_res_device *isp_res);
+void omap3ispresizer_resume(struct isp_res_device *isp_res);
 
-int ispresizer_busy(struct isp_res_device *isp_res);
+int omap3isp_resizer_busy(struct isp_res_device *isp_res);
 
 #endif	/* OMAP3_ISP_RESIZER_H */

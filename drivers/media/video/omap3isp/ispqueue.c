@@ -684,7 +684,7 @@ static int isp_video_queue_alloc(struct isp_video_queue *queue,
  * Return 0 on success or -EBUSY if the queue is busy or buffers haven't been
  * unmapped.
  */
-int isp_video_queue_cleanup(struct isp_video_queue *queue)
+int omap3isp_video_queue_cleanup(struct isp_video_queue *queue)
 {
 	return isp_video_queue_free(queue);
 }
@@ -710,7 +710,7 @@ int isp_video_queue_cleanup(struct isp_video_queue *queue)
  *
  * Return 0 on success.
  */
-int isp_video_queue_init(struct isp_video_queue *queue, enum v4l2_buf_type type,
+int omap3isp_video_queue_init(struct isp_video_queue *queue, enum v4l2_buf_type type,
 			 const struct isp_video_queue_operations *ops,
 			 struct device *dev, unsigned int bufsize)
 {
@@ -751,7 +751,7 @@ int isp_video_queue_init(struct isp_video_queue *queue, enum v4l2_buf_type type,
  * -EBUSY if the queue is busy (streaming or buffers mapped)
  * -ENOMEM if the buffers can't be allocated due to an out-of-memory condition
  */
-int isp_video_queue_reqbufs(struct isp_video_queue *queue,
+int omap3isp_video_queue_reqbufs(struct isp_video_queue *queue,
 			    struct v4l2_requestbuffers *rb)
 {
 	unsigned int nbuffers = rb->count;
@@ -789,7 +789,7 @@ done:
  *
  * Return 0 on success or -EINVAL if the buffer type or index are invalid.
  */
-int isp_video_queue_querybuf(struct isp_video_queue *queue,
+int omap3isp_video_queue_querybuf(struct isp_video_queue *queue,
 			     struct v4l2_buffer *vbuf)
 {
 	struct isp_video_buffer *buf;
@@ -826,7 +826,7 @@ done:
  * the buffer has a different userspace address, the old memory area is unlocked
  * and the new memory area is locked.
  */
-int isp_video_queue_qbuf(struct isp_video_queue *queue,
+int omap3isp_video_queue_qbuf(struct isp_video_queue *queue,
 			 struct v4l2_buffer *vbuf)
 {
 	struct isp_video_buffer *buf;
@@ -894,7 +894,7 @@ done:
  * the buffer has a different userspace address, the old memory area is unlocked
  * and the new memory area is locked.
  */
-int isp_video_queue_dqbuf(struct isp_video_queue *queue,
+int omap3isp_video_queue_dqbuf(struct isp_video_queue *queue,
 			  struct v4l2_buffer *vbuf, int nonblocking)
 {
 	struct isp_video_buffer *buf;
@@ -935,7 +935,7 @@ done:
  *
  * Return 0 on success.
  */
-int isp_video_queue_streamon(struct isp_video_queue *queue)
+int omap3isp_video_queue_streamon(struct isp_video_queue *queue)
 {
 	struct isp_video_buffer *buf;
 	unsigned long flags;
@@ -967,7 +967,7 @@ done:
  * delayed works before calling this function to make sure no buffer will be
  * touched by the driver and/or hardware.
  */
-void isp_video_queue_streamoff(struct isp_video_queue *queue)
+void omap3isp_video_queue_streamoff(struct isp_video_queue *queue)
 {
 	struct isp_video_buffer *buf;
 	unsigned long flags;
@@ -1008,7 +1008,7 @@ done:
  * delayed works before calling this function to make sure no buffer will be
  * touched by the driver and/or hardware.
  */
-void isp_video_queue_discard_done(struct isp_video_queue *queue)
+void omap3isp_video_queue_discard_done(struct isp_video_queue *queue)
 {
 	struct isp_video_buffer *buf;
 	unsigned int i;
@@ -1056,7 +1056,7 @@ static const struct vm_operations_struct isp_video_queue_vm_ops = {
  *
  * Only buffers of memory type MMAP are supported.
  */
-int isp_video_queue_mmap(struct isp_video_queue *queue,
+int omap3isp_video_queue_mmap(struct isp_video_queue *queue,
 			 struct vm_area_struct *vma)
 {
 	struct isp_video_buffer *uninitialized_var(buf);
@@ -1107,7 +1107,7 @@ done:
  *
  * If no buffer is present at the front of the queue, POLLERR is returned.
  */
-unsigned int isp_video_queue_poll(struct isp_video_queue *queue,
+unsigned int omap3isp_video_queue_poll(struct isp_video_queue *queue,
 				  struct file *file, poll_table *wait)
 {
 	struct isp_video_buffer *buf;

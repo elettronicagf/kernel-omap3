@@ -7,7 +7,7 @@
  * Copyright (C) 2009 Texas Instruments, Inc.
  *
  * Contacts: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
- *	     Sakari Ailus <sakari.ailus@maxwell.research.nokia.com>
+ *	     Sakari Ailus <sakari.ailus@iki.fi>
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -102,8 +102,11 @@ enum isp_interface_type {
 	ISP_INTERFACE_CSI2C_PHY1,
 };
 
+/* ISP: OMAP 34xx ES 1.0 */
 #define ISP_REVISION_1_0		0x10
+/* ISP2: OMAP 34xx ES 2.0, 2.1 and 3.0 */
 #define ISP_REVISION_2_0		0x20
+/* ISP2P: OMAP 36xx */
 #define ISP_REVISION_15_0		0xF0
 
 /*
@@ -208,6 +211,7 @@ struct isp_v4l2_subdevs_group {
 
 struct isp_platform_data {
 	struct isp_v4l2_subdevs_group *subdevs;
+	void (*set_constraints)(struct isp_device *isp, bool enable);
 };
 
 struct isp_platform_callback {
@@ -272,6 +276,7 @@ struct isp_device {
 	struct mutex isp_mutex;	/* For handling ref_count field */
 	int has_context;
 	int ref_count;
+	unsigned int autoidle;
 	u32 xclk_divisor[2];	/* Two clocks, a and b. */
 #define ISP_CLK_CAM_ICK		0
 #define ISP_CLK_CAM_MCLK	1
@@ -304,34 +309,38 @@ struct isp_device {
 #define v4l2_dev_to_isp_device(dev) \
 	container_of(dev, struct isp_device, v4l2_dev)
 
-void isphist_dma_done(struct isp_device *isp);
+void omap3isp_hist_dma_done(struct isp_device *isp);
 
-void isp_flush(struct isp_device *isp);
+void omap3isp_flush(struct isp_device *isp);
 
-int isp_module_sync_idle(struct media_entity *me, wait_queue_head_t *wait,
-			 atomic_t *stopping);
+int omap3isp_module_sync_idle(struct media_entity *me, wait_queue_head_t *wait,
+			      atomic_t *stopping);
 
-int isp_module_sync_is_stopping(wait_queue_head_t *wait, atomic_t *stopping);
+int omap3isp_module_sync_is_stopping(wait_queue_head_t *wait,
+				     atomic_t *stopping);
 
-int isp_pipeline_set_stream(struct isp_pipeline *pipe,
-			    enum isp_pipeline_stream_state state);
-void isp_configure_bridge(struct isp_device *isp, enum ccdc_input_entity input,
-			  const struct isp_parallel_platform_data *pdata);
+int omap3isp_pipeline_set_stream(struct isp_pipeline *pipe,
+				 enum isp_pipeline_stream_state state);
+void omap3isp_configure_bridge(struct isp_device *isp,
+			       enum ccdc_input_entity input,
+			       const struct isp_parallel_platform_data *pdata);
 
-#define ISP_XCLK_NONE			-1
-#define ISP_XCLK_A			0
-#define ISP_XCLK_B			1
+#define ISP_XCLK_NONE			0
+#define ISP_XCLK_A			1
+#define ISP_XCLK_B			2
 
-struct isp_device *isp_get(struct isp_device *isp);
-void isp_put(struct isp_device *isp);
+struct isp_device *omap3isp_get(struct isp_device *isp);
+void omap3isp_put(struct isp_device *isp);
 
-void isp_print_status(struct isp_device *isp);
+void omap3isp_print_status(struct isp_device *isp);
 
-void isp_sbl_enable(struct isp_device *isp, enum isp_sbl_resource res);
-void isp_sbl_disable(struct isp_device *isp, enum isp_sbl_resource res);
+void omap3isp_sbl_enable(struct isp_device *isp, enum isp_sbl_resource res);
+void omap3isp_sbl_disable(struct isp_device *isp, enum isp_sbl_resource res);
 
-void isp_subclk_enable(struct isp_device *isp, enum isp_subclk_resource res);
-void isp_subclk_disable(struct isp_device *isp, enum isp_subclk_resource res);
+void omap3isp_subclk_enable(struct isp_device *isp,
+			    enum isp_subclk_resource res);
+void omap3isp_subclk_disable(struct isp_device *isp,
+			     enum isp_subclk_resource res);
 
 int omap3isp_pipeline_pm_use(struct media_entity *entity, int use);
 

@@ -71,7 +71,7 @@
 #define OMAP3_EGF_TVP5150_ENABLE_GPIO		163
 
 #include <media/tvp515x.h>
-#include <../drivers/media/video/isp/isp.h>
+#include <../drivers/media/video/omap3isp/isp.h>
 #include "devices.h"
 #endif
 

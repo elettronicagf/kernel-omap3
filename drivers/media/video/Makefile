@@ -134,7 +134,7 @@ obj-$(CONFIG_VIDEO_MMP_CAMERA) += marvell-ccic/
 
 obj-$(CONFIG_VIDEO_VIA_CAMERA) += via-camera.o
 
-obj-$(CONFIG_VIDEO_OMAP3)	+= isp/
+obj-$(CONFIG_VIDEO_OMAP3)	+= omap3isp/
 
 obj-$(CONFIG_USB_ZR364XX)       += zr364xx.o
 obj-$(CONFIG_USB_STKWEBCAM)     += stkwebcam.o

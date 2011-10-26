@@ -35,7 +35,7 @@
 #include "ispqueue.h"
 
 #define ISP_VIDEO_DRIVER_NAME		"ispvideo"
-#define ISP_VIDEO_DRIVER_VERSION	KERNEL_VERSION(0, 0, 1)
+#define ISP_VIDEO_DRIVER_VERSION	"0.0.2"
 
 struct isp_device;
 struct isp_video;
@@ -186,21 +186,21 @@ struct isp_video_fh {
 #define isp_video_queue_to_isp_video_fh(q) \
 				container_of(q, struct isp_video_fh, queue)
 
-extern int isp_video_init(struct isp_video *video, const char *name);
-extern int isp_video_register(struct isp_video *video,
-			      struct v4l2_device *vdev);
-extern void isp_video_unregister(struct isp_video *video);
-extern struct isp_buffer *isp_video_buffer_next(struct isp_video *video,
-						unsigned int error);
-extern void isp_video_resume(struct isp_video *video, int continuous);
-extern struct media_pad *isp_video_remote_pad(struct isp_video *video);
-extern void isp_video_mbus_to_pix(const struct isp_video *video,
+int omap3isp_video_init(struct isp_video *video, const char *name);
+int omap3isp_video_register(struct isp_video *video,
+			    struct v4l2_device *vdev);
+void omap3isp_video_unregister(struct isp_video *video);
+struct isp_buffer *omap3isp_video_buffer_next(struct isp_video *video,
+					      unsigned int error);
+void omap3isp_video_resume(struct isp_video *video, int continuous);
+struct media_pad *omap3isp_video_remote_pad(struct isp_video *video);
+void isp_video_mbus_to_pix(const struct isp_video *video,
 				  const struct v4l2_mbus_framefmt *mbus,
 				  struct v4l2_pix_format *pix);
-extern void isp_video_pix_to_mbus(const struct v4l2_pix_format *pix,
+void isp_video_pix_to_mbus(const struct v4l2_pix_format *pix,
 				  struct v4l2_mbus_framefmt *mbus);
 
-extern const struct isp_format_info *
-isp_video_format_info(enum v4l2_mbus_pixelcode code);
+const struct isp_format_info *
+omap3isp_video_format_info(enum v4l2_mbus_pixelcode code);
 
 #endif /* OMAP3_ISP_VIDEO_H */

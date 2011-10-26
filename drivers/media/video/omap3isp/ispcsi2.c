@@ -652,7 +652,7 @@ static void isp_csi2_isr_buffer(struct isp_csi2_device *csi2)
 
 	isp_csi2_ctx_enable(isp, csi2, 0, 0);
 
-	buffer = isp_video_buffer_next(&csi2->video_out, 0);
+	buffer = omap3isp_video_buffer_next(&csi2->video_out, 0);
 
 	/*
 	 * Let video queue operation restart engine if there is an underrun
@@ -763,7 +763,7 @@ int isp_csi2_isr(struct isp_csi2_device *csi2)
 		retval = -EIO;
 	}
 
-	if (isp_module_sync_is_stopping(&csi2->wait, &csi2->stopping))
+	if (omap3isp_module_sync_is_stopping(&csi2->wait, &csi2->stopping))
 		return 0;
 
 	/* Successful cases */
@@ -864,7 +864,7 @@ csi2_try_format(struct isp_csi2_device *csi2, struct v4l2_subdev_fh *fh,
 		 * Only Allow DPCM decompression, and check that the
 		 * pattern is preserved
 		 */
-		info = isp_video_format_info(fmt->code);
+		info = omap3isp_video_format_info(fmt->code);
 		if (info->uncompressed == pixelcode)
 			fmt->code = pixelcode;
 		break;
@@ -905,7 +905,7 @@ static int csi2_enum_mbus_code(struct v4l2_subdev *sd,
 			break;
 		case 1:
 			/* Uncompressed code */
-			info = isp_video_format_info(format->code);
+			info = omap3isp_video_format_info(format->code);
 			if (info->uncompressed == format->code)
 				return -EINVAL;
 
@@ -1064,7 +1064,7 @@ static int csi2_set_stream(struct v4l2_subdev *sd, int enable)
 	case ISP_PIPELINE_STREAM_STOPPED:
 		if (csi2->state == ISP_PIPELINE_STREAM_STOPPED)
 			return 0;
-		if (isp_module_sync_idle(&sd->entity, &csi2->wait,
+		if (omap3isp_module_sync_idle(&sd->entity, &csi2->wait,
 					 &csi2->stopping))
 			dev_dbg(isp->dev, "%s: module stop timeout.\n",
 				sd->name);
@@ -1220,7 +1220,7 @@ static int isp_csi2_init_entities(struct isp_csi2_device *csi2)
 	csi2->video_out.isp = csi2->isp;
 	csi2->video_out.capture_mem = PAGE_ALIGN(4096 * 4096) * 3;
 
-	ret = isp_video_init(&csi2->video_out, "CSI2a");
+	ret = omap3isp_video_init(&csi2->video_out, "CSI2a");
 	if (ret < 0)
 		return ret;
 
@@ -1239,7 +1239,7 @@ void isp_csi2_unregister_entities(struct isp_csi2_device *csi2)
 
 	v4l2_device_unregister_subdev(&csi2->subdev);
 	v4l2_ctrl_handler_free(&csi2->ctrls);
-	isp_video_unregister(&csi2->video_out);
+	omap3isp_video_unregister(&csi2->video_out);
 }
 
 int isp_csi2_register_entities(struct isp_csi2_device *csi2,
@@ -1252,7 +1252,7 @@ int isp_csi2_register_entities(struct isp_csi2_device *csi2,
 	if (ret < 0)
 		goto error;
 
-	ret = isp_video_register(&csi2->video_out, vdev);
+	ret = omap3isp_video_register(&csi2->video_out, vdev);
 	if (ret < 0)
 		goto error;
 

@@ -197,9 +197,9 @@ static void isphist_dma_cb(int lch, u16 ch_status, void *data)
 	isp_reg_clr(hist->isp, OMAP3_ISP_IOMEM_HIST, ISPHIST_CNT,
 		    ISPHIST_CNT_CLEAR);
 
-	ispstat_dma_isr(hist);
+	omap3isp_stat_dma_isr(hist);
 	if (hist->state != ISPSTAT_DISABLED)
-		isphist_dma_done(hist->isp);
+		omap3isp_hist_dma_done(hist->isp);
 }
 
 static int isphist_buf_dma(struct ispstat *hist)
@@ -215,7 +215,7 @@ static int isphist_buf_dma(struct ispstat *hist)
 	isp_reg_writel(hist->isp, 0, OMAP3_ISP_IOMEM_HIST, ISPHIST_ADDR);
 	isp_reg_set(hist->isp, OMAP3_ISP_IOMEM_HIST, ISPHIST_CNT,
 		    ISPHIST_CNT_CLEAR);
-	isp_flush(hist->isp);
+	omap3isp_flush(hist->isp);
 	hist->dma_config.dst_start = dma_addr;
 	hist->dma_config.elem_count = hist->buf_size / sizeof(u32);
 	omap_set_dma_params(hist->dma_ch, &hist->dma_config);
@@ -428,12 +428,12 @@ static long isphist_ioctl(struct v4l2_subdev *sd, unsigned int cmd, void *arg)
 
 	switch (cmd) {
 	case VIDIOC_OMAP3ISP_HIST_CFG:
-		return ispstat_config(stat, arg);
+		return omap3isp_stat_config(stat, arg);
 	case VIDIOC_OMAP3ISP_STAT_REQ:
-		return ispstat_request_statistics(stat, arg);
+		return omap3isp_stat_request_statistics(stat, arg);
 	case VIDIOC_OMAP3ISP_STAT_EN: {
 		int *en = arg;
-		return ispstat_enable(stat, !!*en);
+		return omap3isp_stat_enable(stat, !!*en);
 	}
 	}
 
@@ -452,12 +452,12 @@ static const struct ispstat_ops isphist_ops = {
 
 static const struct v4l2_subdev_core_ops isphist_subdev_core_ops = {
 	.ioctl = isphist_ioctl,
-	.subscribe_event = ispstat_subscribe_event,
-	.unsubscribe_event = ispstat_unsubscribe_event,
+	.subscribe_event = omap3isp_stat_subscribe_event,
+	.unsubscribe_event = omap3isp_stat_unsubscribe_event,
 };
 
 static const struct v4l2_subdev_video_ops isphist_subdev_video_ops = {
-	.s_stream = ispstat_s_stream,
+	.s_stream = omap3isp_stat_s_stream,
 };
 
 static const struct v4l2_subdev_ops isphist_subdev_ops = {
@@ -498,7 +498,7 @@ int isp_hist_init(struct isp_device *isp)
 	hist->event_type = V4L2_EVENT_OMAP3ISP_HIST;
 	hist->isp = isp;
 
-	ret = ispstat_init(hist, "histogram", &isphist_subdev_ops);
+	ret = omap3isp_stat_init(hist, "histogram", &isphist_subdev_ops);
 	if (ret) {
 		kfree(hist_cfg);
 		if (HIST_USING_DMA(hist))
@@ -516,5 +516,5 @@ void isp_hist_cleanup(struct isp_device *isp)
 	if (HIST_USING_DMA(&isp->isp_hist))
 		omap_free_dma(isp->isp_hist.dma_ch);
 	kfree(isp->isp_hist.priv);
-	ispstat_free(&isp->isp_hist);
+	omap3isp_stat_free(&isp->isp_hist);
 }

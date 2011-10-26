@@ -46,9 +46,9 @@ struct scatterlist;
  *	device yet.
  * @ISP_BUF_STATE_ACTIVE: The buffer is in use for an active video transfer.
  * @ISP_BUF_STATE_ERROR: The device is done with the buffer and an error
- *	occured. For capture device the buffer likely contains corrupted data or
+ *	occurred. For capture device the buffer likely contains corrupted data or
  *	no data at all.
- * @ISP_BUF_STATE_DONE: The device is done with the buffer and no error occured.
+ * @ISP_BUF_STATE_DONE: The device is done with the buffer and no error occurred.
  *	For capture devices the buffer contains valid data.
  */
 enum isp_video_buffer_state {
@@ -160,25 +160,25 @@ struct isp_video_queue {
 	struct list_head queue;
 };
 
-int isp_video_queue_cleanup(struct isp_video_queue *queue);
-int isp_video_queue_init(struct isp_video_queue *queue, enum v4l2_buf_type type,
+int omap3isp_video_queue_cleanup(struct isp_video_queue *queue);
+int omap3isp_video_queue_init(struct isp_video_queue *queue, enum v4l2_buf_type type,
 			 const struct isp_video_queue_operations *ops,
 			 struct device *dev, unsigned int bufsize);
 
-int isp_video_queue_reqbufs(struct isp_video_queue *queue,
+int omap3isp_video_queue_reqbufs(struct isp_video_queue *queue,
 			    struct v4l2_requestbuffers *rb);
-int isp_video_queue_querybuf(struct isp_video_queue *queue,
+int omap3isp_video_queue_querybuf(struct isp_video_queue *queue,
 			     struct v4l2_buffer *vbuf);
-int isp_video_queue_qbuf(struct isp_video_queue *queue,
+int omap3isp_video_queue_qbuf(struct isp_video_queue *queue,
 			 struct v4l2_buffer *vbuf);
-int isp_video_queue_dqbuf(struct isp_video_queue *queue,
+int omap3isp_video_queue_dqbuf(struct isp_video_queue *queue,
 			  struct v4l2_buffer *vbuf, int nonblocking);
-int isp_video_queue_streamon(struct isp_video_queue *queue);
-void isp_video_queue_streamoff(struct isp_video_queue *queue);
-void isp_video_queue_discard_done(struct isp_video_queue *queue);
-int isp_video_queue_mmap(struct isp_video_queue *queue,
+int omap3isp_video_queue_streamon(struct isp_video_queue *queue);
+void omap3isp_video_queue_streamoff(struct isp_video_queue *queue);
+void omap3isp_video_queue_discard_done(struct isp_video_queue *queue);
+int omap3isp_video_queue_mmap(struct isp_video_queue *queue,
 			 struct vm_area_struct *vma);
-unsigned int isp_video_queue_poll(struct isp_video_queue *queue,
+unsigned int omap3isp_video_queue_poll(struct isp_video_queue *queue,
 				  struct file *file, poll_table *wait);
 
 #endif /* OMAP3_ISP_QUEUE_H */
