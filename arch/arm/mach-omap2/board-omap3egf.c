@@ -538,16 +538,6 @@ static int __init omap3_egf_i2c_init(void)
 
 
 
-static void __init omap3_egf_init_early(void)
-{
-	omap2_init_common_infrastructure();
-}
-
-static void __init omap3_egf_init_irq(void)
-{
-	omap3_init_irq();
-}
-
 static struct platform_device *omap3_egf_devices[] __initdata = {
 
 };
@@ -578,8 +568,8 @@ static void __init egf_opp_init(void)
 	if (cpu_is_omap3630()) {
 		struct device *mpu_dev, *iva_dev;
 
-		mpu_dev = omap2_get_mpuss_device();
-		iva_dev = omap2_get_iva_device();
+		mpu_dev = omap_device_get_by_hwmod_name("mpu");
+		iva_dev = omap_device_get_by_hwmod_name("iva");
 
 		if (!mpu_dev || !iva_dev) {
 			pr_err("%s: Aiee.. no mpu/dsp devices? %p %p\n",
@@ -633,11 +623,11 @@ static void __init omap3_egf_init(void)
 
 MACHINE_START(OMAP3_EGF, "OMAP3 elettronicaGF SOM")
 	/* Maintainer: Andrea Collamati <andrea.collamati@elettronicagf.it> */
-	.boot_params	= 0x80000100,
+	.atag_offset	= 0x100,
 	.reserve	= omap_reserve,
 	.map_io		= omap3_map_io,
-	.init_early	= omap3_egf_init_early,
-	.init_irq	= omap3_egf_init_irq,
+	.init_early	= omap3_init_early,
+	.init_irq	= omap3_init_irq,
 	.init_machine	= omap3_egf_init,
 	.timer		= &omap3_secure_timer,
 MACHINE_END
