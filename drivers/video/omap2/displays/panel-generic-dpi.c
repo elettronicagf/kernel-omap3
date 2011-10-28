@@ -61,177 +61,27 @@ static struct panel_config generic_dpi_panels[] = {
 	/* Generic Panel */
 	{
 		{
-			.x_res		= 640,
-			.y_res		= 480,
-
-			.pixel_clock	= 23500,
-
-			.hfp		= 48,
-			.hsw		= 32,
-			.hbp		= 80,
-
-			.vfp		= 3,
-			.vsw		= 4,
-			.vbp		= 7,
-		},
-		.acbi			= 0x0,
-		.acb			= 0x0,
-		.config			= OMAP_DSS_LCD_TFT,
-		.power_on_delay		= 0,
-		.power_off_delay	= 0,
-		.name			= "generic",
-	},
-
-	/* Sharp LQ043T1DG01 */
-	{
-		{
-			.x_res		= 480,
-			.y_res		= 272,
-
-			.pixel_clock	= 9000,
-
-			.hsw		= 42,
-			.hfp		= 3,
-			.hbp		= 2,
-
-			.vsw		= 11,
-			.vfp		= 3,
-			.vbp		= 2,
-		},
-		.acbi			= 0x0,
-		.acb			= 0x0,
-		.config			= OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
-					OMAP_DSS_LCD_IHS | OMAP_DSS_LCD_IEO,
-		.power_on_delay		= 50,
-		.power_off_delay	= 100,
-		.name			= "sharp_lq",
-	},
-
-	/* Sharp LS037V7DW01 */
-	{
-		{
-			.x_res		= 480,
-			.y_res		= 640,
-
-			.pixel_clock	= 19200,
-
-			.hsw		= 2,
-			.hfp		= 1,
-			.hbp		= 28,
-
-			.vsw		= 1,
-			.vfp		= 1,
-			.vbp		= 1,
-		},
-		.acbi			= 0x0,
-		.acb			= 0x28,
-		.config			= OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
-						OMAP_DSS_LCD_IHS,
-		.power_on_delay		= 50,
-		.power_off_delay	= 100,
-		.name			= "sharp_ls",
-	},
-
-	/* Toppoly TDO35S */
-	{
-		{
-			.x_res		= 480,
-			.y_res		= 640,
-
-			.pixel_clock	= 26000,
-
-			.hfp		= 104,
-			.hsw		= 8,
-			.hbp		= 8,
-
-			.vfp		= 4,
-			.vsw		= 2,
-			.vbp		= 2,
-		},
-		.acbi			= 0x0,
-		.acb			= 0x0,
-		.config			= OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
-					OMAP_DSS_LCD_IHS | OMAP_DSS_LCD_IPC |
-					OMAP_DSS_LCD_ONOFF,
-		.power_on_delay		= 0,
-		.power_off_delay	= 0,
-		.name			= "toppoly_tdo35s",
-	},
-
-	/* Samsung LTE430WQ-F0C */
-	{
-		{
-			.x_res		= 480,
-			.y_res		= 272,
-
-			.pixel_clock	= 9200,
-
-			.hfp		= 8,
-			.hsw		= 41,
-			.hbp		= 45 - 41,
-
-			.vfp		= 4,
-			.vsw		= 10,
-			.vbp		= 12 - 10,
-		},
-		.acbi			= 0x0,
-		.acb			= 0x0,
-		.config			= OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
-						OMAP_DSS_LCD_IHS,
-		.power_on_delay		= 0,
-		.power_off_delay	= 0,
-		.name			= "samsung_lte430wq_f0c",
-	},
-
-	/* Seiko 70WVW1TZ3Z3 */
-	{
-		{
 			.x_res		= 800,
-			.y_res		= 480,
+			.y_res		= 600,
 
-			.pixel_clock	= 33000,
+			.pixel_clock	= 40000,
 
+			.hfp		= 40,
 			.hsw		= 128,
-			.hfp		= 10,
-			.hbp		= 10,
+			.hbp		= 88,
 
-			.vsw		= 2,
-			.vfp		= 4,
-			.vbp		= 11,
+			.vfp		= 1,
+			.vsw		= 4,
+			.vbp		= 23,
 		},
 		.acbi			= 0x0,
 		.acb			= 0x0,
-		.config			= OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
-						OMAP_DSS_LCD_IHS,
+		.config			= OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IPC,
 		.power_on_delay		= 0,
 		.power_off_delay	= 0,
-		.name			= "seiko_70wvw1tz3",
+		.name			= "mbugrf-1",
 	},
 
-	/* Powertip PH480272T */
-	{
-		{
-			.x_res		= 480,
-			.y_res		= 272,
-
-			.pixel_clock	= 9000,
-
-			.hsw		= 40,
-			.hfp		= 2,
-			.hbp		= 2,
-
-			.vsw		= 10,
-			.vfp		= 2,
-			.vbp		= 2,
-		},
-		.acbi			= 0x0,
-		.acb			= 0x0,
-		.config			= OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
-					  OMAP_DSS_LCD_IHS | OMAP_DSS_LCD_IEO,
-		.power_on_delay		= 0,
-		.power_off_delay	= 0,
-		.name			= "powertip_ph480272t",
-	},
 };
 
 struct panel_drv_data {
