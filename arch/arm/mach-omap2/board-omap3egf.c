@@ -62,6 +62,38 @@
 
 
 
+#if defined(CONFIG_SMSC911X) || defined(CONFIG_SMSC911X_MODULE)
+#include <linux/smsc911x.h>
+#define OMAP3EGF_ETHR_GPIO_IRQ	176
+#define OMAP3EGF_SMSC911X_CS	5
+#define OMAP3EGF_ETHR_GPIO_RST	64
+
+#include <plat/gpmc-smsc911x.h>
+
+static struct omap_smsc911x_platform_data smsc911x_cfg = {
+	.cs             = OMAP3EGF_SMSC911X_CS,
+	.gpio_irq       = OMAP3EGF_ETHR_GPIO_IRQ,
+	.gpio_reset     = -EINVAL,
+	.flags		= SMSC911X_USE_32BIT | SMSC911X_SAVE_MAC_ADDRESS,
+};
+
+static inline void __init egf_init_smsc911x(void)
+{
+	struct clk *l3ck;
+	unsigned int rate;
+
+	l3ck = clk_get(NULL, "l3_ck");
+	if (IS_ERR(l3ck))
+		rate = 100000000;
+	else
+		rate = clk_get_rate(l3ck);
+
+	smsc911x_cfg.gpio_reset = OMAP3EGF_ETHR_GPIO_RST;
+
+	gpmc_smsc911x_init(&smsc911x_cfg);
+}
+
+#endif
 
 
 
@@ -340,7 +372,7 @@ static void __init omap3_egf_init(void)
 	usb_musb_init(NULL);
 	usbhs_init(&usbhs_bdata);
 	egf_display_init();
-
+	egf_init_smsc911x();
 	egf_opp_init();
 }
 
