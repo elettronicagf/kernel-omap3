@@ -419,6 +419,37 @@ static struct regulator_consumer_supply egf_vsim_supply[] = {
 	REGULATOR_SUPPLY("vmmc_aux", "omap_hsmmc.0"),
 };
 
+static uint32_t board_keymap[] = {
+	KEY(0, 0, KEY_F1),
+	KEY(0, 1, KEY_UP),
+	KEY(0, 2, KEY_ENTER),
+
+	KEY(1, 0, KEY_F2),
+	KEY(1, 1, KEY_DOWN),
+	KEY(1, 3, KEY_VOLUMEUP),
+
+	KEY(2, 0, KEY_F3),
+	KEY(2, 1, KEY_LEFT),
+	KEY(2, 3, KEY_VOLUMEDOWN),
+
+	KEY(3, 0, KEY_F4),
+	KEY(3, 1, KEY_RIGHT),
+	KEY(3, 3, KEY_POWER),
+};
+
+static struct matrix_keymap_data board_map_data = {
+	.keymap			= board_keymap,
+	.keymap_size		= ARRAY_SIZE(board_keymap),
+};
+
+static struct twl4030_keypad_data omap3egf_kp_data = {
+	.keymap_data	= &board_map_data,
+	.rows		= 4,
+	.cols		= 4,
+	.rep		= 1,
+};
+
+
 static int egf_twl_gpio_setup(struct device *dev,
 		unsigned gpio, unsigned ngpio)
 {
@@ -488,6 +519,7 @@ static struct regulator_init_data egf_vsim = {
 
 static struct twl4030_platform_data egf_twldata = {
 	/* platform_data for children goes here */
+	.keypad		= &omap3egf_kp_data,
 	.gpio		= &egf_gpio_data,
 	.vmmc1		= &egf_vmmc1,
 	.vmmc2		= &egf_vmmc2,
