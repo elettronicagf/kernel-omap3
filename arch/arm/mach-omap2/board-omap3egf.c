@@ -60,7 +60,7 @@
 #define EEPROM_ON_MODULE_I2C_ADDR 0x50
 #define EEPROM_ON_BOARD_I2C_ADDR  0x56
 
-
+#define OMAP3_EGF_SERIAL_BUSY	12
 
 #if defined(CONFIG_SMSC911X) || defined(CONFIG_SMSC911X_MODULE)
 #include <linux/smsc911x.h>
@@ -155,6 +155,20 @@ static void __init egf_display_init(void)
 
 
 }
+
+static const struct gpio_led egf_leds[] __initconst = {
+	{
+		.name = "evb_led0",
+		.default_trigger = "default-on",
+		.gpio = OMAP3_EGF_SERIAL_BUSY,
+	},
+};
+
+static const struct gpio_led_platform_data egf_leds_data __initconst = {
+	.leds = egf_leds,
+	.num_leds = ARRAY_SIZE(egf_leds),
+};
+
 
 static struct omap2_hsmmc_info mmc[] = {
 	{
@@ -369,10 +383,11 @@ static void __init omap3_egf_init(void)
 	omap_sdrc_init(mt46h32m32lf6_sdrc_params,
 				  mt46h32m32lf6_sdrc_params);
 
-	usb_musb_init(NULL);
+//	usb_musb_init(NULL);
 	usbhs_init(&usbhs_bdata);
 	egf_display_init();
 	egf_init_smsc911x();
+	gpio_led_register_device(-1, &egf_leds_data);
 	egf_opp_init();
 }
 
