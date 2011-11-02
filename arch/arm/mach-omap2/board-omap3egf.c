@@ -159,7 +159,7 @@ static void __init egf_display_init(void)
 static const struct gpio_led egf_leds[] __initconst = {
 	{
 		.name = "evb_led0",
-		.default_trigger = "default-on",
+//		.default_trigger = "default-on",
 		.gpio = OMAP3_EGF_SERIAL_BUSY,
 	},
 };
