@@ -55,6 +55,10 @@
 #include "sdram-micron-mt46h32m32lf-6.h"
 
 #define OMAP3_EGF_DISPLAY_ENABLE_GPIO			140
+#define OMAP3_EGF_COR_nPD_TFP410 				142
+#define OMAP3_EGF_COR_RESET_TFP410 			143
+#define OMAP3_EGF_I2C3_SCL_GPIO_184 			184
+#define OMAP3_EGF_I2C3_SDA_GPIO_185 			185
 
 #include <linux/i2c/at24.h>
 #define EEPROM_ON_MODULE_I2C_ADDR 0x50
@@ -148,10 +152,30 @@ static void __init egf_display_init(void)
 {
 	int r;
 
-	r = gpio_request_one(OMAP3_EGF_DISPLAY_ENABLE_GPIO, GPIOF_OUT_INIT_HIGH,
-			     "Display Enable");
+	r = gpio_request_one(OMAP3_EGF_DISPLAY_ENABLE_GPIO, GPIOF_OUT_INIT_HIGH, "Display Enable");
 	if (r < 0)
 		printk(KERN_ERR "Unable to get Display Enable GPIO\n");
+
+	r = gpio_request_one(OMAP3_EGF_COR_nPD_TFP410, GPIOF_OUT_INIT_HIGH, "TFP410 nPD");
+	if (r < 0)
+		printk(KERN_ERR "Unable to get OMAP3_EGF_COR_nPD_TFP410\n");
+
+	r = gpio_request_one(OMAP3_EGF_COR_RESET_TFP410, GPIOF_OUT_INIT_LOW,"TFP410 RESET");
+	if (r < 0)
+		printk(KERN_ERR "Unable to get OMAP3_EGF_COR_nRESET_TFP410\n");
+
+	r = gpio_request_one(OMAP3_EGF_I2C3_SCL_GPIO_184, GPIOF_OUT_INIT_HIGH,"I2C3_SCL");
+	if (r < 0)
+		printk(KERN_ERR "Unable to get OMAP3_EGF_I2C3_SCL_GPIO_184\n");
+
+	r = gpio_request_one(OMAP3_EGF_I2C3_SDA_GPIO_185, GPIOF_OUT_INIT_LOW, "I2C3_SDA");
+	if (r < 0)
+		printk(KERN_ERR "Unable to get OMAP3_EGF_I2C3_SDA_GPIO_185\n");
+
+
+
+
+
 
 
 }
@@ -385,7 +409,6 @@ static void __init omap3_egf_init(void)
 
 //	usb_musb_init(NULL);
 	usbhs_init(&usbhs_bdata);
-	egf_display_init();
 	egf_init_smsc911x();
 	gpio_led_register_device(-1, &egf_leds_data);
 	egf_opp_init();
