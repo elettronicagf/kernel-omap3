@@ -1,0 +1,8 @@
+
+VA eseguito da una shell root per evitare problemi di permesso.
+MASSIMA ATTENZIONE AI PATH per non cancellare il proprio sistema operativo!!!!
+
+
+host > cd target_fs
+host > find . | cpio -H newc -o > ../root.cpio
+
