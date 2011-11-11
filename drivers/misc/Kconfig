@@ -415,7 +415,12 @@ config VMWARE_BALLOON
 	  be allocated to other guests. The balloon can also be deflated
 	  to allow the guest to use more physical memory.
 
-	  If unsure, say N.
+config JTAG_CPLD
+	tristate "Driver per interfaccia GPIO JTAG per CPLD ALTERA"
+	depends on MACH_OMAP3_EGF
+	default y
+	---help---
+	This driver allows to program via JTAG elettronicaGF SOM module CPLD
 
 	  To compile this driver as a module, choose M here: the
 	  module will be called vmw_balloon.

@@ -118,9 +118,10 @@ config SND_OMAP_SOC_OMAP3_PANDORA
 config SND_OMAP_SOC_OMAP3_BEAGLE
 	tristate "SoC Audio support for OMAP3 Beagle and Devkit8000"
 	depends on TWL4030_CORE && SND_OMAP_SOC
-	depends on (MACH_OMAP3_BEAGLE || MACH_DEVKIT8000)
+	depends on (MACH_OMAP3_BEAGLE || MACH_DEVKIT8000 ||MACH_OMAP3_EGF)
 	select SND_OMAP_SOC_MCBSP
 	select SND_SOC_TWL4030
+	select SND_SOC_TWL6040
 	help
 	  Say Y if you want to add support for SoC audio on the Beagleboard or
 	  the clone Devkit8000.

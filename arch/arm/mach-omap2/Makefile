@@ -184,6 +184,9 @@ obj-$(CONFIG_MACH_OMAP_APOLLON)		+= board-apollon.o
 obj-$(CONFIG_MACH_OMAP3_BEAGLE)		+= board-omap3beagle.o \
 					   board-flash.o \
 					   hsmmc.o
+obj-$(CONFIG_MACH_OMAP3_EGF)		+= board-omap3egf.o \
+					   hsmmc.o \
+					   omap_phy_internal.o
 obj-$(CONFIG_MACH_DEVKIT8000)     	+= board-devkit8000.o \
                                            hsmmc.o
 obj-$(CONFIG_MACH_OMAP_LDP)		+= board-ldp.o \

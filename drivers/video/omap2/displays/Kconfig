@@ -13,6 +13,13 @@ config PANEL_SHARP_LS037V7DW01
         select BACKLIGHT_CLASS_DEVICE
         help
           LCD Panel used in TI's SDP3430 and EVM boards
+          
+config PANEL_EGF_BLC1089
+        tristate "Elettronica GF BLC1089 LCD Panel"
+        depends on OMAP2_DSS_DPI
+        select BACKLIGHT_CLASS_DEVICE
+        help
+          LCD Panel used in TI eGF 377 BaseBoard
 
 config PANEL_SHARP_LQ043T1DG01
         tristate "Sharp LQ043T1DG01 LCD Panel"

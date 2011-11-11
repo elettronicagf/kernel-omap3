@@ -221,6 +221,11 @@ static int smsc95xx_eeprom_confirm_not_busy(struct usbnet *dev)
 	do {
 		smsc95xx_read_reg(dev, E2P_CMD, &val);
 
+		if (!(val & E2P_CMD_LOADED_)) {
+			netdev_warn(dev->net, "No EEPROM Loaded\n");
+			return 0;
+		}
+
 		if (!(val & E2P_CMD_BUSY_))
 			return 0;
 

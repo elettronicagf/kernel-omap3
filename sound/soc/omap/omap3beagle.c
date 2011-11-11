@@ -112,7 +112,7 @@ static int __init omap3beagle_soc_init(void)
 {
 	int ret;
 
-	if (!(machine_is_omap3_beagle() || machine_is_devkit8000()))
+	if (!(machine_is_omap3_beagle() || machine_is_omap3_egf() || machine_is_devkit8000()))
 		return -ENODEV;
 	pr_info("OMAP3 Beagle/Devkit8000 SoC init\n");
 

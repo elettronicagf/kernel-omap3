@@ -401,4 +401,11 @@ config GPIO_JANZ_TTL
 	  This driver provides support for driving the pins in output
 	  mode only. Input mode is not supported.
 
+config GPIO_SPI
+	tristate "Elettronica GF CPLD Based SPI GPIO Expander"
+	depends on SPI_MASTER
+	help
+	  CPLD Driver for Elettronica GF SOM 336.  This provides
+	  a GPIO interface supporting inputs and outputs.
+		
 endif
