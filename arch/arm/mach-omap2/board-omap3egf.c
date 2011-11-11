@@ -57,6 +57,11 @@
 #define OMAP3_EGF_DISPLAY_ENABLE_GPIO			213
 #define OMAP3_EGF_LCD_3V3_ENABLE_GPIO 			2
 
+/* EEPROM */
+#include <linux/i2c/at24.h>
+#define EEPROM_ON_MODULE_I2C_ADDR 0x50
+#define EEPROM_ON_BOARD_I2C_ADDR  0x56
+
 
 /* TOUCHSCREEN */
 #if defined(CONFIG_TOUCHSCREEN_SX8652)
@@ -207,6 +212,30 @@ static void __init egf_display_init(void)
 
 }
 
+/* EEPROM  */
+
+/* EEprom on SOM336 */
+static struct at24_platform_data at24c64 = {
+     .byte_len       = SZ_64K / 8,
+     .flags			 = AT24_FLAG_ADDR16,
+     .page_size      = 32,
+};
+
+
+static struct i2c_board_info __initdata egf_i2c_eeprom_on_module[] = {
+       {
+               I2C_BOARD_INFO("24c64", EEPROM_ON_MODULE_I2C_ADDR),
+               .platform_data  = &at24c64,
+       },
+};
+
+/* EEprom on JSF0377 */
+static struct i2c_board_info __initdata egf_i2c_eeprom_on_board[] = {
+       {
+               I2C_BOARD_INFO("24c04", EEPROM_ON_BOARD_I2C_ADDR),
+       },
+};
+
 #include "sdram-micron-mt46h32m32lf-6.h"
 
 static struct omap2_hsmmc_info mmc[] = {
@@ -352,12 +381,6 @@ static struct i2c_board_info __initdata egf_i2c_boardinfo[] = {
 	},
 };
 
-static struct i2c_board_info __initdata egf_i2c_eeprom[] = {
-       {
-               I2C_BOARD_INFO("eeprom", 0x50),
-       },
-};
-
 static int __init omap3_egf_i2c_init(void)
 {
 	omap_register_i2c_bus(1, 2600, egf_i2c_boardinfo,
@@ -366,9 +389,9 @@ static int __init omap3_egf_i2c_init(void)
 	/* Bus 2 is used for Camera/Sensor interface */
 	omap_register_i2c_bus(2, 400, NULL, 0);
 
-	/* Bus 3 is attached to the DVI port where devices like the pico DLP
-	 * projector don't work reliably with 400kHz */
-	omap_register_i2c_bus(3, 100, egf_i2c_eeprom, ARRAY_SIZE(egf_i2c_eeprom));
+	omap_register_i2c_bus(2, 400, egf_i2c_eeprom_on_module, ARRAY_SIZE(egf_i2c_eeprom_on_module));
+	omap_register_i2c_bus(3, 400, egf_i2c_eeprom_on_board, ARRAY_SIZE(egf_i2c_eeprom_on_board));
+
 
 	return 0;
 }
