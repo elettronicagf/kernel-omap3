@@ -244,12 +244,21 @@ static struct omap2_hsmmc_info mmc[] = {
 		.caps		= MMC_CAP_4_BIT_DATA ,
 		.gpio_wp	= -EINVAL,
 	},
+	{
+    	.mmc		= 2,
+    	.caps		= MMC_CAP_4_BIT_DATA,
+    	.gpio_wp	= -EINVAL,
+		.ext_clock	= 1,
+		.transceiver	= true,
+	},
 	{}	/* Terminator */
 };
 
-static struct regulator_consumer_supply egf_vmmc1_supply = {
-	.supply			= "vmmc",
-};
+static struct regulator_consumer_supply egf_vmmc1_supply =
+	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.0");
+
+static struct regulator_consumer_supply egf_vmmc2_supply =
+	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.1");
 
 static struct regulator_consumer_supply egf_vsim_supply = {
 	.supply			= "vmmc_aux",
@@ -263,11 +272,8 @@ static int egf_twl_gpio_setup(struct device *dev,
 {
 	/* gpio + 0 is "mmc0_cd" (input/IRQ) */
 	mmc[0].gpio_cd = gpio + 0;
+	mmc[1].gpio_cd = gpio + 1;
 	omap2_hsmmc_init(mmc);
-
-	/* link regulators to MMC adapters */
-	egf_vmmc1_supply.dev = mmc[0].dev;
-	egf_vsim_supply.dev = mmc[0].dev;
 
 
 
@@ -299,7 +305,20 @@ static struct regulator_init_data egf_vmmc1 = {
 	.num_consumer_supplies	= 1,
 	.consumer_supplies	= &egf_vmmc1_supply,
 };
-
+/* VMMC2 for MMC2 pins CMD, CLK, DAT0..DAT3 (max 100 mA) */
+static struct regulator_init_data egf_vmmc2 = {
+	.constraints = {
+		.min_uV			= 1850000,
+		.max_uV			= 3150000,
+		.valid_modes_mask	= REGULATOR_MODE_NORMAL
+					| REGULATOR_MODE_STANDBY,
+		.valid_ops_mask		= REGULATOR_CHANGE_VOLTAGE
+					| REGULATOR_CHANGE_MODE
+					| REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies	= 1,
+	.consumer_supplies	= &egf_vmmc2_supply,
+};
 /* VSIM for MMC1 pins DAT4..DAT7 (2 mA, plus card == max 50 mA) */
 static struct regulator_init_data egf_vsim = {
 	.constraints = {
@@ -367,6 +386,7 @@ static struct twl4030_platform_data egf_twldata = {
 	.gpio		= &egf_gpio_data,
 	.codec		= &egf_codec_data,
 	.vmmc1		= &egf_vmmc1,
+	.vmmc2		= &egf_vmmc2,
 	.vsim		= &egf_vsim,
 	.vdac		= &egf_vdac,
 	.vpll2		= &egf_vpll2,
@@ -387,8 +407,6 @@ static int __init omap3_egf_i2c_init(void)
 			ARRAY_SIZE(egf_i2c_boardinfo));
 
 	/* Bus 2 is used for Camera/Sensor interface */
-	omap_register_i2c_bus(2, 400, NULL, 0);
-
 	omap_register_i2c_bus(2, 400, egf_i2c_eeprom_on_module, ARRAY_SIZE(egf_i2c_eeprom_on_module));
 	omap_register_i2c_bus(3, 400, egf_i2c_eeprom_on_board, ARRAY_SIZE(egf_i2c_eeprom_on_board));
 
