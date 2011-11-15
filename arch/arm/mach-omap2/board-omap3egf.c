@@ -216,8 +216,6 @@ static void __init egf_ts_init(void)
 #define TWL_LED_PWMON	0x0
 #define TWL_LED_PWMOFF	0x1
 
-#define OMAP3_EGF_LCD_3V3_ENABLE_GPIO 2
-#define DISPLAY_EN_GPIO 213
 
 static struct spi_board_info  egf_gpio_spi[] = {
 		/* GPIO SPI EXPANDER CPLD */
@@ -243,6 +241,63 @@ static struct spi_board_info  egf_gpio_spi[] = {
 
 
 /* DSS */
+static int lcd_set_backlight(struct omap_dss_device *dssdev, int level)
+{
+	unsigned char c;
+	u8 mux_pwm, enb_pwm;
+
+	if (level > 100)
+		return -1;
+
+	twl_i2c_read_u8(TWL4030_MODULE_INTBR, &mux_pwm, TWL_INTBR_PMBR1);
+	twl_i2c_read_u8(TWL4030_MODULE_INTBR, &enb_pwm, TWL_INTBR_GPBR1);
+
+	if (level == 0) {
+		/* disable pwm1 output and clock */
+		enb_pwm = enb_pwm & 0xF5;
+		/* change pwm1 pin to gpio pin */
+		mux_pwm = mux_pwm & 0xCF;
+		twl_i2c_write_u8(TWL4030_MODULE_INTBR,
+					enb_pwm, TWL_INTBR_GPBR1);
+		twl_i2c_write_u8(TWL4030_MODULE_INTBR,
+					mux_pwm, TWL_INTBR_PMBR1);
+		return 0;
+	}
+
+	if (!((enb_pwm & 0xA) && (mux_pwm & 0x30))) {
+		/* change gpio pin to pwm1 pin */
+		mux_pwm = mux_pwm | 0x30;
+		/* enable pwm1 output and clock*/
+		enb_pwm = enb_pwm | 0x0A;
+		twl_i2c_write_u8(TWL4030_MODULE_INTBR,
+					mux_pwm, TWL_INTBR_PMBR1);
+		twl_i2c_write_u8(TWL4030_MODULE_INTBR,
+					enb_pwm, TWL_INTBR_GPBR1);
+	}
+
+	c = ((50 * (100 - level)) / 100) + 1;
+	twl_i2c_write_u8(TWL4030_MODULE_PWM1, 0x7F, TWL_LED_PWMOFF);
+	twl_i2c_write_u8(TWL4030_MODULE_PWM1, c, TWL_LED_PWMON);
+
+	return 0;
+
+}
+
+static int egf_enable_lcd(struct omap_dss_device *dssdev)
+{
+	gpio_set_value(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 1);
+	gpio_set_value(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 1);
+
+	return 0;
+}
+
+static void egf_disable_lcd(struct omap_dss_device *dssdev)
+{
+	gpio_set_value(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 0);
+	gpio_set_value(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 0);
+
+	return;
+}
 
 static int egf_enable_dvi(struct omap_dss_device *dssdev)
 {
@@ -268,6 +323,19 @@ static struct omap_dss_device egf_dvi_device = {
 	.platform_disable = egf_disable_dvi,
 };
 
+static struct omap_dss_device egf_lcd_device = {
+	.type = OMAP_DISPLAY_TYPE_DPI,
+	.name = "lcd",
+	.driver_name = "egf_blc1089_ls_panel",
+	.phy.dpi.data_lines = 24,
+	.platform_enable = egf_enable_lcd,
+	.platform_disable = egf_disable_lcd,
+	//.reset_gpio=213,
+	.max_backlight_level = 100,
+	.set_backlight = lcd_set_backlight,
+	.reset_gpio = OMAP3_EGF_DISPLAY_ENABLE_GPIO,
+};
+
 static struct omap_dss_device egf_tv_device = {
 	.name = "tv",
 	.driver_name = "venc",
@@ -276,6 +344,7 @@ static struct omap_dss_device egf_tv_device = {
 };
 
 static struct omap_dss_device *egf_dss_devices[] = {
+	&egf_lcd_device,
 	&egf_dvi_device,
 	&egf_tv_device,
 };
@@ -312,13 +381,13 @@ static void __init egf_display_init(void)
 
 	gpio_direction_output(egf_dvi_device.reset_gpio, 0);
 
-	r = gpio_request(egf_dvi_device.reset_gpio, "DVI reset");
+	r = gpio_request(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, "LCD 3V3 Enable");
 		if (r < 0) {
 			printk(KERN_ERR "Unable to get LCD 3V3 Enable GPIO\n");
 			return;
 		}
 
-	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 1);
+	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 0);
 
 }
 
