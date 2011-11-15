@@ -40,7 +40,7 @@
 #include "ispvideo.h"
 #include "isp.h"
 
-#include <media/tvp514x.h>
+//#include <media/tvp514x.h>
 
 /* -----------------------------------------------------------------------------
  * Helper functions
@@ -1050,10 +1050,7 @@ isp_video_s_input(struct file *file, void *fh, unsigned int input)
 				MEDIA_ENTITY_TYPE_V4L2_SUBDEV) {
 			subdev = media_entity_to_v4l2_subdev(entity);
 			if (subdev != NULL) {
-				if (input == 0)
-					route.input = INPUT_CVBS_VI4A;
-				else
-					route.input = INPUT_SVIDEO_VI2C_VI1C;
+				route.input = input;
 				route.output = 0;
 				ret = v4l2_subdev_call(subdev, video, s_routing,
 						route.input, route.output, 0);
@@ -1245,15 +1242,33 @@ static int isp_video_mmap(struct file *file, struct vm_area_struct *vma)
 	return isp_video_queue_mmap(&vfh->queue, vma);
 }
 
+//#define DEBUG_ISP_V4L2_IOCTL
+
+#ifdef DEBUG_ISP_V4L2_IOCTL
+long isp_v4l2_ioctl(struct file *filp, unsigned int cmd,
+		    unsigned long arg)
+{
+	long res;
+	struct video_device *vfd = video_devdata(filp);
+	vfd->debug = V4L2_DEBUG_IOCTL | V4L2_DEBUG_IOCTL_ARG;
+	res = video_ioctl2(filp, cmd, arg);
+	vfd->debug = 0;
+	return res;
+}
+#endif
+
 static struct v4l2_file_operations isp_video_fops = {
 	.owner = THIS_MODULE,
+#ifdef DEBUG_ISP_V4L2_IOCTL
+	.unlocked_ioctl = isp_v4l2_ioctl,
+#else
 	.unlocked_ioctl = video_ioctl2,
+#endif
 	.open = isp_video_open,
 	.release = isp_video_release,
 	.poll = isp_video_poll,
 	.mmap = isp_video_mmap,
 };
-
 /* -----------------------------------------------------------------------------
  * ISP video core
  */

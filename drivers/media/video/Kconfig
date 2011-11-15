@@ -416,14 +416,24 @@ config VIDEO_TVP514X
 	  To compile this driver as a module, choose M here: the
 	  module will be called tvp514x.
 
-config VIDEO_TVP5150
-	tristate "Texas Instruments TVP5150 video decoder"
+config VIDEO_TVP515X
+	tristate "Texas Instruments TVP515x video decoder"
 	depends on VIDEO_V4L2 && I2C
 	---help---
-	  Support for the Texas Instruments TVP5150 video decoder.
+	  This is a Video4Linux2 sensor-level driver for the TI TVP5150/51
+	  decoder. It is currently working with the TI OMAP3 camera
+	  controller.
 
 	  To compile this driver as a module, choose M here: the
-	  module will be called tvp5150.
+	  module will be called tvp515x.
+
+config VIDEO_TVP515X_SOM336_INPUT_SELECTOR
+	bool "Enable TVP5151 input selector on SOM336 Module"
+	depends on VIDEO_TVP515X
+	---help---
+		SOM336 module has an input selector before TVP5151 which extends the
+		2 CVBS/1 S-videon input to 4 CVBS/2 S-video inputs.
+
 
 config VIDEO_TVP7002
 	tristate "Texas Instruments TVP7002 video decoder"

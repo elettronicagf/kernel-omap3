@@ -124,6 +124,9 @@ enum {
 	/* module tvp5150 */
 	V4L2_IDENT_TVP5150 = 5150,
 
+	/* module tvp5151 */
+	V4L2_IDENT_TVP5151 = 5151,
+
 	/* module saa5246a: just ident 5246 */
 	V4L2_IDENT_SAA5246A = 5246,
 
