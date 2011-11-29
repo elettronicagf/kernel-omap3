@@ -562,6 +562,11 @@ static struct twl4030_codec_data egf_codec_data = {
 	.audio_mclk = 26000000,
 	.audio = &egf_audio_data,
 };
+static struct twl4030_madc_platform_data egf_madc_data = {
+ .irq_line = 1,
+};
+
+
 
 static struct twl4030_platform_data egf_twldata = {
 	.irq_base	= TWL4030_IRQ_BASE,
@@ -576,6 +581,7 @@ static struct twl4030_platform_data egf_twldata = {
 //	.vsim		= &egf_vsim,
 	.vdac		= &egf_vdac,
 	.vpll2		= &egf_vpll2,
+	.madc		= &egf_madc_data,
 };
 
 static struct i2c_board_info __initdata egf_i2c_boardinfo[] = {
