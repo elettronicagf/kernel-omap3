@@ -78,6 +78,11 @@
 #define OMAP3_EGF_TVP5150_INPUT_SEL_GPIO	138
 #endif
 
+/* TOUCHSCREEN */
+#ifdef CONFIG_TOUCHSCREEN_SX8652
+#define	OMAP3_EGF_TS_GPIO 114
+#include <linux/spi/sx8652.h>
+#endif
 
 
 #ifdef CONFIG_VIDEO_TVP515X
@@ -439,9 +444,11 @@ static struct regulator_consumer_supply egf_vmmc1_supply =
 static struct regulator_consumer_supply egf_vmmc2_supply =
 	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.1");
 
+/*
 static struct regulator_consumer_supply egf_vsim_supply = {
 	.supply			= "vmmc_aux",
 };
+*/
 
 
 static struct gpio_led gpio_leds[];
@@ -498,7 +505,7 @@ static struct regulator_init_data egf_vmmc2 = {
 	.num_consumer_supplies	= 1,
 	.consumer_supplies	= &egf_vmmc2_supply,
 };
-/* VSIM for MMC1 pins DAT4..DAT7 (2 mA, plus card == max 50 mA) */
+/* VSIM for MMC1 pins DAT4..DAT7 (2 mA, plus card == max 50 mA)
 static struct regulator_init_data egf_vsim = {
 	.constraints = {
 		.min_uV			= 1800000,
@@ -511,7 +518,7 @@ static struct regulator_init_data egf_vsim = {
 	},
 	.num_consumer_supplies	= 1,
 	.consumer_supplies	= &egf_vsim_supply,
-};
+};*/
 
 /* VDAC for DSS driving S-Video (8 mA unloaded, max 65 mA) */
 static struct regulator_init_data egf_vdac = {
@@ -566,7 +573,7 @@ static struct twl4030_platform_data egf_twldata = {
 	.codec		= &egf_codec_data,
 	.vmmc1		= &egf_vmmc1,
 	.vmmc2		= &egf_vmmc2,
-	.vsim		= &egf_vsim,
+//	.vsim		= &egf_vsim,
 	.vdac		= &egf_vdac,
 	.vpll2		= &egf_vpll2,
 };
@@ -608,7 +615,7 @@ static void __init omap3_egf_init_irq(void)
 				  mt46h32m32lf6_sdrc_params);
 	omap_init_irq();
 	gpmc_init();
-	omap2_gp_clockevent_set_gptimer(1);
+	omap2_gp_clockevent_set_gptimer(12);
 
 }
 
@@ -653,7 +660,7 @@ static void __init omap3_egf_init(void)
 
 	usb_musb_init(&musb_board_data);
 	usb_ehci_init(&ehci_pdata);
-
+	egf_ts_init();
 	egf_display_init();
 	egf_cam_init();
 }

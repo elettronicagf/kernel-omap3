@@ -211,7 +211,7 @@ static void sx8652_async_rx(void *ads)
 	struct sx8652 *ts = ads;
 	unsigned long flags;
 	u16 *data_ptr;
-	u32 rt;
+	u32 rt=0;
 	int i;
 	int x = 0, y = 0, z1 = 0, z2 = 0;
 
@@ -223,6 +223,7 @@ static void sx8652_async_rx(void *ads)
 	for (i = 0; i < NUM_READ_REGS; i++) {
 		u16 data = swab16(data_ptr[i]);
 		u8 ch = data >> 12;
+		printk("%d: %d\n", i, data & 0xfff);
 		switch (ch) {
 			case CH_X:
 				x = data & 0xfff;
@@ -237,17 +238,17 @@ static void sx8652_async_rx(void *ads)
 				z2 = data & 0xfff;
 				break;
 			default:
-				printk(KERN_ERR "? %d: %x\n", i, data);
 				break;
 		}
 	}
-
-	rt = z2;
-	rt -= z1;
-	rt *= y;
-	rt *= ts->y_plate_ohms;
-	rt /= z1;
-	rt = (rt + 2047) >> 12;
+	if (likely(y && z1)) {
+		rt = z2;
+		rt -= z1;
+		rt *= y;
+		rt *= ts->y_plate_ohms;
+		rt /= z1;
+		rt = (rt + 2047) >> 12;
+	}
 	if (rt > MAX_12BIT) {
 		//dev_err(&ts->spi->dev, "ignored pressure %d\n", rt);
 		goto end;
