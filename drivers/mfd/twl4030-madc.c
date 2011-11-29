@@ -46,6 +46,8 @@
 #include <linux/types.h>
 #include <linux/gfp.h>
 #include <linux/err.h>
+/* register for setup muxing of channels [3-6] */
+#define CARKIT_ANA_CTRL		0xBB
 
 /*
  * struct twl4030_madc_data - a container for madc info
@@ -509,6 +511,13 @@ int twl4030_madc_conversion(struct twl4030_madc_request *req)
 	const struct twl4030_madc_conversion_method *method;
 	u8 ch_msb, ch_lsb;
 	int ret;
+#ifdef CONFIG_MACH_OMAP3_EGF
+	/* Enable channels [3-6] */
+	ret = twl_i2c_write_u8(TWL4030_MODULE_USB, CARKIT_ANA_CTRL, 0x08);
+	if (ret) {
+		printk("init_madc_muxing could not setup CARKIT_ANA_CTRL\n");
+	}
+#endif
 
 	if (!req)
 		return -EINVAL;
@@ -737,6 +746,7 @@ static int __devinit twl4030_madc_probe(struct platform_device *pdev)
 			TWL4030_BCI_BCICTL1);
 		goto err_i2c;
 	}
+
 	platform_set_drvdata(pdev, madc);
 	mutex_init(&madc->lock);
 	ret = request_threaded_irq(platform_get_irq(pdev, 0), NULL,
