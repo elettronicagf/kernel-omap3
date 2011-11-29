@@ -382,7 +382,9 @@ static void twl4030_phy_power(struct twl4030_usb *twl, int on)
 		__twl4030_phy_power(twl, 0);
 		regulator_disable(twl->usb1v5);
 		regulator_disable(twl->usb1v8);
+#ifndef CONFIG_TWL4030_MADC
 		regulator_disable(twl->usb3v1);
+#endif
 	}
 }
 

@@ -511,12 +511,21 @@ int twl4030_madc_conversion(struct twl4030_madc_request *req)
 	const struct twl4030_madc_conversion_method *method;
 	u8 ch_msb, ch_lsb;
 	int ret;
+	u8 read_value;
 #ifdef CONFIG_MACH_OMAP3_EGF
 	/* Enable channels [3-6] */
-	ret = twl_i2c_write_u8(TWL4030_MODULE_USB, CARKIT_ANA_CTRL, 0x08);
-	if (ret) {
-		printk("init_madc_muxing could not setup CARKIT_ANA_CTRL\n");
+	ret = twl_i2c_read_u8(TWL4030_MODULE_USB, &read_value, CARKIT_ANA_CTRL);
+	if (!ret) {
+		ret = twl_i2c_write_u8(TWL4030_MODULE_USB, read_value | 0x08, CARKIT_ANA_CTRL);
+		if (ret) {
+			printk("init_madc_muxing could not setup CARKIT_ANA_CTRL\n");
+		}
+
 	}
+	else {
+		printk("init_madc_muxing could not read CARKIT_ANA_CTRL\n");
+	}
+
 #endif
 
 	if (!req)
