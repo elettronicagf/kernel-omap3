@@ -566,7 +566,35 @@ static struct twl4030_madc_platform_data egf_madc_data = {
  .irq_line = 1,
 };
 
+static uint32_t board_keymap[] = {
+	KEY(0, 0, KEY_F1),
+	KEY(0, 1, KEY_UP),
+	KEY(0, 2, KEY_ENTER),
 
+	KEY(1, 0, KEY_F2),
+	KEY(1, 1, KEY_DOWN),
+	KEY(1, 3, KEY_VOLUMEUP),
+
+	KEY(2, 0, KEY_F3),
+	KEY(2, 1, KEY_LEFT),
+	KEY(2, 3, KEY_VOLUMEDOWN),
+
+	KEY(3, 0, KEY_F4),
+	KEY(3, 1, KEY_RIGHT),
+	KEY(3, 3, KEY_POWER),
+};
+
+static struct matrix_keymap_data board_map_data = {
+	.keymap			= board_keymap,
+	.keymap_size		= ARRAY_SIZE(board_keymap),
+};
+
+static struct twl4030_keypad_data omap3egf_kp_data = {
+	.keymap_data	= &board_map_data,
+	.rows		= 4,
+	.cols		= 4,
+	.rep		= 1,
+};
 
 static struct twl4030_platform_data egf_twldata = {
 	.irq_base	= TWL4030_IRQ_BASE,
@@ -582,6 +610,7 @@ static struct twl4030_platform_data egf_twldata = {
 	.vdac		= &egf_vdac,
 	.vpll2		= &egf_vpll2,
 	.madc		= &egf_madc_data,
+	.keypad		= &omap3egf_kp_data,
 };
 
 static struct i2c_board_info __initdata egf_i2c_boardinfo[] = {
