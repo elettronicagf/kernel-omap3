@@ -661,7 +661,7 @@ static struct platform_device *omap3_egf_devices[] __initdata = {
 
 static const struct ehci_hcd_omap_platform_data ehci_pdata __initconst = {
 
-	.port_mode[0] = EHCI_HCD_OMAP_MODE_PHY,
+	.port_mode[0] = EHCI_HCD_OMAP_MODE_UNKNOWN,
 	.port_mode[1] = EHCI_HCD_OMAP_MODE_PHY,
 	.port_mode[2] = EHCI_HCD_OMAP_MODE_UNKNOWN,
 
@@ -685,7 +685,13 @@ static struct omap_musb_board_data musb_board_data = {
 
 static void __init omap3_egf_init(void)
 {
-	omap3_mux_init(board_mux, OMAP_PACKAGE_CBB);
+	if (cpu_is_omap3630()){
+		printk("Muxing Detected 37xx\n");
+		omap3_mux_init(board_mux, OMAP_PACKAGE_CBP);
+	}
+	else{
+		omap3_mux_init(board_mux, OMAP_PACKAGE_CBB);
+	}
 	omap3_egf_spi_init();
 	omap3_egf_i2c_init();
 	platform_add_devices(omap3_egf_devices,
