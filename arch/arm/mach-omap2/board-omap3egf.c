@@ -105,16 +105,16 @@ static inline void __init egf_init_smsc911x(void)
 
 static int egf_enable_dvi(struct omap_dss_device *dssdev)
 {
-	if (gpio_is_valid(dssdev->reset_gpio))
-		gpio_set_value(dssdev->reset_gpio, 1);
+//	if (gpio_is_valid(dssdev->reset_gpio))
+//		gpio_set_value(dssdev->reset_gpio, 1);
 
 	return 0;
 }
 
 static void egf_disable_dvi(struct omap_dss_device *dssdev)
 {
-	if (gpio_is_valid(dssdev->reset_gpio))
-		gpio_set_value(dssdev->reset_gpio, 0);
+//	if (gpio_is_valid(dssdev->reset_gpio))
+//		gpio_set_value(dssdev->reset_gpio, 0);
 
 	return;
 }
@@ -131,7 +131,7 @@ static struct omap_dss_device egf_dvi_device = {
 	.name = "dvi",
 	.driver_name = "generic_dpi_panel",
 	.data = &dvi_panel,
-	.phy.dpi.data_lines = 16,
+	.phy.dpi.data_lines = 24,
 	.reset_gpio = OMAP3_EGF_DISPLAY_ENABLE_GPIO,
 };
 

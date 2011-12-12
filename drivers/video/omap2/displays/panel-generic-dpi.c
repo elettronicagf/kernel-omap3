@@ -256,7 +256,10 @@ static int generic_dpi_panel_check_timings(struct omap_dss_device *dssdev,
 {
 	return dpi_check_timings(dssdev, timings);
 }
-
+static int get_corghi_bpp(struct omap_dss_device *dssdev)
+{
+	return 16;
+}
 static struct omap_dss_driver dpi_driver = {
 	.probe		= generic_dpi_panel_probe,
 	.remove		= __exit_p(generic_dpi_panel_remove),
@@ -269,7 +272,7 @@ static struct omap_dss_driver dpi_driver = {
 	.set_timings	= generic_dpi_panel_set_timings,
 	.get_timings	= generic_dpi_panel_get_timings,
 	.check_timings	= generic_dpi_panel_check_timings,
-
+	.get_recommended_bpp = get_corghi_bpp,
 	.driver         = {
 		.name   = "generic_dpi_panel",
 		.owner  = THIS_MODULE,
