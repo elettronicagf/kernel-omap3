@@ -18,7 +18,8 @@
  *  it under the terms of the GNU General Public License version 2 as
  *  published by the Free Software Foundation.
  */
-#define DEBUG
+
+/*#define DEBUG*/
 #include <linux/init.h>
 #include <linux/gpio.h>
 #include <linux/delay.h>
@@ -137,9 +138,7 @@ static struct attribute_group sx8652_attr_group = {
 
 static void sx8652_ts_penup_timer_handler(unsigned long data)
 {
-    struct sx8652 *ts = (struct sx8652 *)data;
-
-	printk(KERN_ERR "penup_timer_handler %d spi_active=%d\n", ts->pen_down, ts->spi_active);
+    	struct sx8652 *ts = (struct sx8652 *)data;
 	input_report_abs(ts->input, ABS_PRESSURE, 0);
 	input_report_key(ts->input, BTN_TOUCH, 0);
 	input_sync(ts->input);
@@ -160,7 +159,7 @@ static int __devinit setup_pendown(struct spi_device *spi, struct sx8652 *ts)
 
 	if (pdata->get_pendown_state) {
 		ts->get_pendown_state = pdata->get_pendown_state;
-		printk(KERN_ERR "get_pendown_state from pdata: %p\n", ts->get_pendown_state);
+		dev_err(&spi->dev,"get_pendown_state from pdata: %p\n", ts->get_pendown_state);
 		return 0;
 	}
 
@@ -223,7 +222,6 @@ static void sx8652_async_rx(void *ads)
 	for (i = 0; i < NUM_READ_REGS; i++) {
 		u16 data = swab16(data_ptr[i]);
 		u8 ch = data >> 12;
-		printk("%d: %d\n", i, data & 0xfff);
 		switch (ch) {
 			case CH_X:
 				x = data & 0xfff;
@@ -256,7 +254,6 @@ static void sx8652_async_rx(void *ads)
 
 	if (rt) {
 		if (!ts->pen_down) {
-			//printk(KERN_ERR "pendown\n");
 			input_report_key(ts->input, BTN_TOUCH, 1);
 			ts->pen_down = 1;
 		}
