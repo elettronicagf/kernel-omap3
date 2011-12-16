@@ -172,12 +172,16 @@ static int uart_startup(struct tty_struct *tty, struct uart_state *state, int in
 
 	retval = uport->ops->startup(uport);
 	if (retval == 0) {
-		if (init_hw) {
-			/*
-			 * Initialise the hardware port settings.
-			 */
-			uart_change_speed(tty, state, NULL);
+		if (uart_console(uport) && uport->cons->cflag) {
+			tty->termios->c_cflag = uport->cons->cflag;
+			uport->cons->cflag = 0;
+		}
+		/*
+		 * Initialise the hardware port settings.
+		 */
+		uart_change_speed(tty, state, NULL);
 
+		if (init_hw) {
 			/*
 			 * Setup the RTS and DTR signals once the
 			 * port is open and ready to respond.
@@ -1470,45 +1474,6 @@ static void uart_hangup(struct tty_struct *tty)
 	mutex_unlock(&port->mutex);
 }
 
-/**
- *	uart_update_termios	-	update the terminal hw settings
- *	@tty: tty associated with UART
- *	@state: UART to update
- *
- *	Copy across the serial console cflag setting into the termios settings
- *	for the initial open of the port.  This allows continuity between the
- *	kernel settings, and the settings init adopts when it opens the port
- *	for the first time.
- */
-static void uart_update_termios(struct tty_struct *tty,
-						struct uart_state *state)
-{
-	struct uart_port *port = state->uart_port;
-
-	if (uart_console(port) && port->cons->cflag) {
-		tty->termios->c_cflag = port->cons->cflag;
-		port->cons->cflag = 0;
-	}
-
-	/*
-	 * If the device failed to grab its irq resources,
-	 * or some other error occurred, don't try to talk
-	 * to the port hardware.
-	 */
-	if (!(tty->flags & (1 << TTY_IO_ERROR))) {
-		/*
-		 * Make termios settings take effect.
-		 */
-		uart_change_speed(tty, state, NULL);
-
-		/*
-		 * And finally enable the RTS and DTR signals.
-		 */
-		if (tty->termios->c_cflag & CBAUD)
-			uart_set_mctrl(port, TIOCM_DTR | TIOCM_RTS);
-	}
-}
-
 static int uart_carrier_raised(struct tty_port *port)
 {
 	struct uart_state *state = container_of(port, struct uart_state, port);
@@ -1528,16 +1493,8 @@ static void uart_dtr_rts(struct tty_port *port, int onoff)
 	struct uart_state *state = container_of(port, struct uart_state, port);
 	struct uart_port *uport = state->uart_port;
 
-	if (onoff) {
+	if (onoff)
 		uart_set_mctrl(uport, TIOCM_DTR | TIOCM_RTS);
-
-		/*
-		 * If this is the first open to succeed,
-		 * adjust things to suit.
-		 */
-		if (!test_and_set_bit(ASYNCB_NORMAL_ACTIVE, &port->flags))
-			uart_update_termios(port->tty, state);
-	}
 	else
 		uart_clear_mctrl(uport, TIOCM_DTR | TIOCM_RTS);
 }
@@ -2064,7 +2021,7 @@ int uart_resume_port(struct uart_driver *drv, struct uart_port *uport)
 	/*
 	 * Re-enable the console device after suspending.
 	 */
-	if (console_suspend_enabled && uart_console(uport)) {
+	if (uart_console(uport)) {
 		/*
 		 * First try to use the console cflag setting.
 		 */
@@ -2077,9 +2034,9 @@ int uart_resume_port(struct uart_driver *drv, struct uart_port *uport)
 		if (port->tty && port->tty->termios && termios.c_cflag == 0)
 			termios = *(port->tty->termios);
 
-		uart_change_pm(state, 0);
 		uport->ops->set_termios(uport, &termios, NULL);
-		console_start(uport->cons);
+		if (console_suspend_enabled)
+			console_start(uport->cons);
 	}
 
 	if (port->flags & ASYNC_SUSPENDED) {
