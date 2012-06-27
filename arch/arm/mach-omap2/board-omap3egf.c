@@ -88,11 +88,6 @@
 #define PWR_P1_SW_EVENTS	0x10
 #define PWR_DEVOFF	(1<<0)
 
-#if defined (CONFIG_MACH_OMAP3_EXPLOR)
-#define        EXPLOR_REBOOT_GPIO    (295)
-#define        EXPLOR_SHUTDOWN_GPIO  (294)
-#endif
-
 
 static void twl4030_poweroff(void)
 {
