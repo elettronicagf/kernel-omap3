@@ -85,6 +85,50 @@
 #endif
 
 
+#define PWR_P1_SW_EVENTS	0x10
+#define PWR_DEVOFF	(1<<0)
+
+#if defined (CONFIG_MACH_OMAP3_EXPLOR)
+#define        EXPLOR_REBOOT_GPIO    (295)
+#define        EXPLOR_SHUTDOWN_GPIO  (294)
+#endif
+
+
+static void twl4030_poweroff(void)
+{
+	u8 val;
+	int err;
+	err = twl_i2c_read_u8(TWL4030_MODULE_PM_MASTER, &val,
+				  PWR_P1_SW_EVENTS);
+	if (err) {
+		printk(KERN_WARNING "I2C error %d while reading TWL4030"
+					"PM_MASTER P1_SW_EVENTS\n", err);
+		return ;
+	}
+
+	val |= PWR_DEVOFF;
+
+	err = twl_i2c_write_u8(TWL4030_MODULE_PM_MASTER, val,
+				   PWR_P1_SW_EVENTS);
+
+	if (err) {
+		printk(KERN_WARNING "I2C error %d while writing TWL4030"
+					"PM_MASTER P1_SW_EVENTS\n", err);
+		return ;
+	}
+
+	return;
+}
+
+static int __init twl4030_poweroff_init(void)
+{
+	pm_power_off = twl4030_poweroff;
+
+	return 0;
+}
+
+
+
 #ifdef CONFIG_VIDEO_TVP515X
 static int egf_tvp515x_s_power(struct v4l2_subdev *subdev, u32 on)
 {
@@ -703,6 +747,7 @@ static void __init omap3_egf_init(void)
 	usb_ehci_init(&ehci_pdata);
 	egf_ts_init();
 	egf_display_init();
+	twl4030_poweroff_init();
 #ifdef CONFIG_VIDEO_TVP515X
 	egf_cam_init();
 #endif
