@@ -703,7 +703,9 @@ static void __init omap3_egf_init(void)
 	usb_ehci_init(&ehci_pdata);
 	egf_ts_init();
 	egf_display_init();
+#ifdef CONFIG_VIDEO_TVP515X
 	egf_cam_init();
+#endif
 }
 
 MACHINE_START(OMAP3_EGF, "OMAP3 EGF")
