@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux/arm 2.6.37 Kernel Configuration
-# Tue Jun 26 17:46:52 2012
+# Wed Jun 27 17:49:06 2012
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -1129,7 +1129,7 @@ CONFIG_GPIO_SYSFS=y
 # CONFIG_GPIO_MAX732X is not set
 # CONFIG_GPIO_PCA953X is not set
 # CONFIG_GPIO_PCF857X is not set
-# CONFIG_GPIO_SX150X is not set
+CONFIG_GPIO_SX150X=y
 CONFIG_GPIO_TWL4030=y
 # CONFIG_GPIO_ADP5588 is not set
 

@@ -84,6 +84,15 @@
 #include <linux/spi/sx8652.h>
 #endif
 
+/* IO EXPANDER */
+#ifdef CONFIG_GPIO_SX150X
+#include <linux/i2c/sx150x.h>
+#define IO_EXPANDER_I2C_ADDR		0x3E
+#define IO_EXPANDER_nINT_GPIO	2 		//CPLD_EXP01_3V3
+#define IO_EXPANDER_nRST_GPIO	3 		//CPLD_EXP02_3V3
+#define IO_EXPANDER_BASE		266 	//the last of gpio_spi is 263
+static struct sx150x_platform_data __initdata sx1509_gpio_expander_data;
+#endif
 
 #define PWR_P1_SW_EVENTS	0x10
 #define PWR_DEVOFF	(1<<0)
@@ -122,6 +131,13 @@ static int __init twl4030_poweroff_init(void)
 	return 0;
 }
 
+#ifdef CONFIG_GPIO_SX150X
+static void __init egf_init_gpio_expander(void)
+{
+	sx1509_gpio_expander_data.irq_summary = gpio_to_irq(IO_EXPANDER_nINT_GPIO);
+	sx1509_gpio_expander_data.gpio_base = IO_EXPANDER_BASE;
+}
+#endif
 
 
 #ifdef CONFIG_VIDEO_TVP515X
@@ -445,11 +461,17 @@ static struct at24_platform_data at24c64 = {
 };
 
 
-static struct i2c_board_info __initdata egf_i2c_eeprom_on_module[] = {
+static struct i2c_board_info __initdata egf_i2c2_devices[] = {
        {
                I2C_BOARD_INFO("24c64", EEPROM_ON_MODULE_I2C_ADDR),
                .platform_data  = &at24c64,
        },
+#ifdef CONFIG_GPIO_SX150X
+       {
+               I2C_BOARD_INFO("sx1509q", IO_EXPANDER_I2C_ADDR),
+               .platform_data  = &sx1509_gpio_expander_data,
+       },
+#endif
 };
 
 /* EEprom on JSF0377 */
@@ -667,7 +689,7 @@ static int __init omap3_egf_i2c_init(void)
 			ARRAY_SIZE(egf_i2c_boardinfo));
 
 	/* Bus 2 is used for Camera/Sensor interface */
-	omap_register_i2c_bus(2, 400, egf_i2c_eeprom_on_module, ARRAY_SIZE(egf_i2c_eeprom_on_module));
+	omap_register_i2c_bus(2, 400, egf_i2c2_devices , ARRAY_SIZE(egf_i2c2_devices));
 	omap_register_i2c_bus(3, 400, egf_i2c_eeprom_on_board, ARRAY_SIZE(egf_i2c_eeprom_on_board));
 
 
@@ -745,6 +767,9 @@ static void __init omap3_egf_init(void)
 	twl4030_poweroff_init();
 #ifdef CONFIG_VIDEO_TVP515X
 	egf_cam_init();
+#endif
+#ifdef CONFIG_GPIO_SX150X
+	egf_init_gpio_expander();
 #endif
 }
 
