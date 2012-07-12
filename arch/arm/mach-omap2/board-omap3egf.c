@@ -33,6 +33,7 @@
 #include <linux/i2c/twl.h>
 
 #include <mach/hardware.h>
+#include <asm/setup.h>
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/map.h>
@@ -88,10 +89,80 @@
 #define PWR_P1_SW_EVENTS	0x10
 #define PWR_DEVOFF	(1<<0)
 
-#if defined (CONFIG_MACH_OMAP3_EXPLOR)
-#define        EXPLOR_REBOOT_GPIO    (295)
-#define        EXPLOR_SHUTDOWN_GPIO  (294)
-#endif
+
+/* SOM REVISIONS */
+#define REV_STR_TO_REV_CODE(REV_STRING) \
+	(\
+	(((REV_STRING[3]-'0')*1000 + (REV_STRING[4]-'0')*100+(REV_STRING[5]-'0')*10 + (REV_STRING[6]-'0')) << 16)|\
+	((REV_STRING[8]-'A') << 8)|\
+	((REV_STRING[9]-'0')*10 + (REV_STRING[10]-'0'))\
+	)
+
+#define SOM_REV_CODE(REV1,REV2,REV3)\
+	((REV1<<16) | ((REV2-'A') << 8) |  REV3)
+
+#define REV_NOT_PROGRAMMED  SOM_REV_CODE(((0xFF-'0')*1000 + (0xFF-'0')*100+(0xFF-'0')*10 + 0xff-'0'),'A',0xFF)
+#define REV_336_A01  SOM_REV_CODE(336,'A',1)
+#define REV_336_B01  SOM_REV_CODE(336,'B',1)
+#define REV_336_C01  SOM_REV_CODE(336,'C',1)
+#define REV_336_D01  SOM_REV_CODE(336,'D',1)
+#define REV_336_E01  SOM_REV_CODE(336,'E',1)
+#define REV_336_F01  SOM_REV_CODE(336,'F',1)
+#define SOM_REVISION_LEN  12  /* termination character included. ex: JSC0336_A02*/
+
+ struct egf_som {
+ 	__u32 rev_code;
+ 	int has_tvp5150;
+ };
+ struct egf_som the_som;
+
+
+ static int load_som_revision(int som_rev_code)
+ {
+ 	while (1) {
+ 		the_som.rev_code = som_rev_code;
+ 		switch (the_som.rev_code) {
+ 		case REV_336_A01:
+ 		case REV_336_B01:
+ 		case REV_336_C01:
+ 		case REV_336_D01:
+ 		case REV_336_E01:
+ 			the_som.has_tvp5150 = 1;
+ 			return 0;
+ 		case REV_336_F01:
+ 			the_som.has_tvp5150 = 0;
+ 			return 0;
+ 		case REV_NOT_PROGRAMMED:
+ 		default:
+ 			the_som.has_tvp5150 = 0;
+ 			printk(KERN_ERR "somrev not supported!\n");
+ 		}
+ 	}
+ 	return 0;
+ }
+ static void __init fixup_egf_board(struct machine_desc *desc,
+ 		struct tag *tags, char **cmdline, struct meminfo *mi)
+ {
+	struct tag *t;
+	char *str;
+	char *str_som_rev;
+
+	for_each_tag(t, tags) {
+		if (t->hdr.tag == ATAG_CMDLINE) {
+			str = t->u.cmdline.cmdline;
+			str = strstr(str, "somrev=");
+			if (str != NULL) {
+				str_som_rev = str + 7;
+				printk(KERN_INFO "SOM REV:%s\n",str_som_rev);
+				load_som_revision(REV_STR_TO_REV_CODE(str_som_rev));
+			}else
+				printk(KERN_ERR "Somrev boot param missing!\n");
+			break;
+		}
+	}
+
+ }
+
 
 
 static void twl4030_poweroff(void)
@@ -749,13 +820,15 @@ static void __init omap3_egf_init(void)
 	egf_display_init();
 	twl4030_poweroff_init();
 #ifdef CONFIG_VIDEO_TVP515X
-	egf_cam_init();
+	if(the_som.has_tvp5150)
+		egf_cam_init();
 #endif
 }
 
 MACHINE_START(OMAP3_EGF, "OMAP3 EGF")
 	/* Maintainer: Andrea Collamati - http://www.elettronicagf.it */
-	.boot_params	= 0x80000100,
+	.boot_params= 0x80000100,
+	.fixup		= fixup_egf_board,
 	.map_io		= omap3_map_io,
 	.reserve	= omap_reserve,
 	.init_irq	= omap3_egf_init_irq,
