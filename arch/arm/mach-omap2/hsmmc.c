@@ -80,9 +80,15 @@ static void omap_hsmmc1_before_set_reg(struct device *dev, int slot,
 
 		reg = omap_ctrl_readl(control_pbias_offset);
 		if (cpu_is_omap3630()) {
-			/* Set MMC I/O to 52Mhz */
 			prog_io = omap_ctrl_readl(OMAP343X_CONTROL_PROG_IO1);
+#ifndef CONFIG_MACH_OMAP3_EGF
+			/* Set MMC I/O to 52Mhz */
 			prog_io |= OMAP3630_PRG_SDMMC1_SPEEDCTRL;
+#else
+			/* Force MMC1 I/O Pin Speed Control to 26 MHz to solve
+			   communication problem with some SD card on 336 */
+			prog_io &= ~OMAP3630_PRG_SDMMC1_SPEEDCTRL;
+#endif
 			omap_ctrl_writel(prog_io, OMAP343X_CONTROL_PROG_IO1);
 		} else {
 			reg |= OMAP2_PBIASSPEEDCTRL0;
