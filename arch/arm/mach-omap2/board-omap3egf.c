@@ -134,8 +134,16 @@ static int __init twl4030_poweroff_init(void)
 #ifdef CONFIG_GPIO_SX150X
 static void __init egf_init_gpio_expander(void)
 {
-	sx1509_gpio_expander_data.irq_summary = gpio_to_irq(IO_EXPANDER_nINT_GPIO);
+	int ret;
+	sx1509_gpio_expander_data.irq_summary = -1; //gpio_to_irq(IO_EXPANDER_nINT_GPIO);
 	sx1509_gpio_expander_data.gpio_base = IO_EXPANDER_BASE;
+	ret = gpio_request(IO_EXPANDER_nRST_GPIO, "sx150x9_nreset");
+	if (ret) {
+		printk(KERN_ERR "failed to get sx150x9_nreset\n");
+	}
+	else{
+		gpio_direction_output(IO_EXPANDER_nRST_GPIO, 1);
+	}
 }
 #endif
 
