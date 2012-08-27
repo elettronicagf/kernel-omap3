@@ -27,6 +27,10 @@
 #include <linux/mtd/mtd.h>
 #include <linux/mtd/partitions.h>
 #include <linux/mtd/nand.h>
+
+#include <linux/wl12xx.h>
+#include <linux/regulator/fixed.h>
+#include <linux/regulator/machine.h>
 #include <linux/mmc/host.h>
 
 #include <linux/regulator/machine.h>
@@ -96,6 +100,53 @@ static struct sx150x_platform_data __initdata sx1509_gpio_expander_data;
 
 #define PWR_P1_SW_EVENTS	0x10
 #define PWR_DEVOFF	(1<<0)
+
+/* WLAN */
+#ifdef CONFIG_WL12XX_PLATFORM_DATA
+
+#define OMAP3EVM_WLAN_PMENA_GPIO	(221)	//MMC3_WF_RESET_3V3
+#define OMAP3EVM_WLAN_IRQ_GPIO		(170)   //HDQ_SIO_1V8_1WIRE
+
+static struct regulator_consumer_supply egf_vmmc3_supply =
+	REGULATOR_SUPPLY("vmmc", "mmci-omap-hs.2");
+
+/* VMMC3 for driving the WL12xx module */
+static struct regulator_init_data egf_vmmc3 = {
+	.constraints = {
+		.valid_ops_mask	= REGULATOR_CHANGE_STATUS,
+	},
+	.num_consumer_supplies	= 1,
+	.consumer_supplies = &egf_vmmc3_supply,
+};
+
+static struct fixed_voltage_config egf_vwlan = {
+	.supply_name		= "vwl1271",
+	.microvolts		= 1800000, /* 1.80V */
+	.gpio			= OMAP3EVM_WLAN_PMENA_GPIO,
+	.startup_delay		= 70000, /* 70ms */
+	.enable_high		= 1,
+	.enabled_at_boot	= 0,
+	.init_data		= &egf_vmmc3,
+};
+
+static struct platform_device egf_wlan_regulator = {
+	.name		= "reg-fixed-voltage",
+	.id		= 1,
+	.dev = {
+		.platform_data	= &egf_vwlan,
+	},
+};
+
+struct wl12xx_platform_data egf_wlan_data __initdata = {
+	.irq = OMAP_GPIO_IRQ(OMAP3EVM_WLAN_IRQ_GPIO),
+	.board_ref_clock = WL12XX_REFCLOCK_26, /* 26 MHz */
+};
+#endif
+
+
+
+
+
 
 
 static void twl4030_poweroff(void)
@@ -504,6 +555,16 @@ static struct omap2_hsmmc_info mmc[] = {
 		.ext_clock	= 1,
 		.transceiver	= true,
 	},
+#ifdef CONFIG_WL12XX_PLATFORM_DATA
+	{
+		.name		= "wl1271",
+		.mmc		= 3,
+		.caps		= MMC_CAP_4_BIT_DATA | MMC_CAP_POWER_OFF_CARD,
+		.gpio_wp	= -EINVAL,
+		.gpio_cd	= -EINVAL,
+		.nonremovable	= true,
+	},
+#endif
 	{}	/* Terminator */
 };
 
@@ -778,6 +839,12 @@ static void __init omap3_egf_init(void)
 #endif
 #ifdef CONFIG_GPIO_SX150X
 	egf_init_gpio_expander();
+#endif
+#ifdef CONFIG_WL12XX_PLATFORM_DATA
+	/* WL12xx WLAN Init */
+	if (wl12xx_set_platform_data(&egf_wlan_data))
+		pr_err("error setting wl12xx data\n");
+	platform_device_register(&egf_wlan_regulator);
 #endif
 }
 
