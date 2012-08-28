@@ -104,6 +104,10 @@ static struct sx150x_platform_data __initdata sx1509_gpio_expander_data;
 /* WLAN */
 #ifdef CONFIG_WL12XX_PLATFORM_DATA
 
+/*
+ * ATTENTION! REMEMBER MMC3_ENABLE_3V3 HAS BEEN ENABLE BY UBOOT!
+ *
+ */
 #define OMAP3EVM_WLAN_PMENA_GPIO	(221)	//MMC3_WF_RESET_3V3
 #define OMAP3EVM_WLAN_IRQ_GPIO		(170)   //HDQ_SIO_1V8_1WIRE
 
@@ -141,6 +145,8 @@ struct wl12xx_platform_data egf_wlan_data __initdata = {
 	.irq = OMAP_GPIO_IRQ(OMAP3EVM_WLAN_IRQ_GPIO),
 	.board_ref_clock = WL12XX_REFCLOCK_26, /* 26 MHz */
 };
+
+
 #endif
 
 
