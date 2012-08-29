@@ -58,7 +58,7 @@
 #include <linux/spi/spi.h>
 #include <linux/gpio_spi.h>
 
-#define OMAP3_EGF_DISPLAY_ENABLE_GPIO			213
+#define OMAP3_EGF_DISPLAY_ENABLE_GPIO			225
 #define OMAP3_EGF_LCD_3V3_ENABLE_GPIO 			2
 
 /* EEPROM */
