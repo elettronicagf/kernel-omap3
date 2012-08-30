@@ -1,9 +1,7 @@
 /*
- * omap3egf.c  --  SoC audio for ElettronicaGF OMAP3 SOM board
+ * omap3egf.c  --  SoC audio for Pandora Handheld Console
  *
- * Author: Stefano Donati <stefano.donati@elettronicagf.it>
- *
- * Derived from omap3beagle.c
+ * Author: Gražvydas Ignotas <notasas@gmail.com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -23,18 +21,23 @@
 
 #include <linux/clk.h>
 #include <linux/platform_device.h>
+#include <linux/regulator/consumer.h>
+
 #include <sound/core.h>
 #include <sound/pcm.h>
 #include <sound/soc.h>
 #include <sound/soc-dapm.h>
 
 #include <asm/mach-types.h>
-#include <mach/hardware.h>
-#include <mach/gpio.h>
 #include <plat/mcbsp.h>
 
 #include "omap-mcbsp.h"
 #include "omap-pcm.h"
+
+
+#define PREFIX "ASoC omap3egf: "
+
+static struct regulator *omap3egf_dac_reg;
 
 static int omap3egf_hw_params(struct snd_pcm_substream *substream,
 	struct snd_pcm_hw_params *params)
@@ -42,70 +45,82 @@ static int omap3egf_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_dai *codec_dai = rtd->codec_dai;
 	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
-	unsigned int fmt;
+	int fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF |
+		  SND_SOC_DAIFMT_CBS_CFS;
 	int ret;
-
-	switch (params_channels(params)) {
-	case 2: /* Stereo I2S mode */
-		fmt =	SND_SOC_DAIFMT_I2S |
-			SND_SOC_DAIFMT_NB_NF |
-			SND_SOC_DAIFMT_CBM_CFM;
-		break;
-	case 4: /* Four channel TDM mode */
-		fmt =	SND_SOC_DAIFMT_DSP_A |
-			SND_SOC_DAIFMT_IB_NF |
-			SND_SOC_DAIFMT_CBM_CFM;
-		break;
-	default:
-		return -EINVAL;
-	}
 
 	/* Set codec DAI configuration */
 	ret = snd_soc_dai_set_fmt(codec_dai, fmt);
 	if (ret < 0) {
-		printk(KERN_ERR "can't set codec DAI configuration\n");
+		pr_err(PREFIX "can't set codec DAI configuration\n");
 		return ret;
 	}
 
 	/* Set cpu DAI configuration */
 	ret = snd_soc_dai_set_fmt(cpu_dai, fmt);
 	if (ret < 0) {
-		printk(KERN_ERR "can't set cpu DAI configuration\n");
+		pr_err(PREFIX "can't set cpu DAI configuration\n");
 		return ret;
 	}
 
 	/* Set the codec system clock for DAC and ADC */
 	ret = snd_soc_dai_set_sysclk(codec_dai, 0, 26000000,
+					    SND_SOC_CLOCK_IN);
+	if (ret < 0) {
+		pr_err(PREFIX "can't set codec system clock\n");
+		return ret;
+	}
+
+	/* Set McBSP clock to external */
+	ret = snd_soc_dai_set_sysclk(cpu_dai, OMAP_MCBSP_SYSCLK_CLKS_EXT,
+				     256 * params_rate(params),
 				     SND_SOC_CLOCK_IN);
 	if (ret < 0) {
-		printk(KERN_ERR "can't set codec system clock\n");
+		pr_err(PREFIX "can't set cpu system clock\n");
+		return ret;
+	}
+
+	ret = snd_soc_dai_set_clkdiv(cpu_dai, OMAP_MCBSP_CLKGDV, 8);
+	if (ret < 0) {
+		pr_err(PREFIX "can't set SRG clock divider\n");
 		return ret;
 	}
 
 	return 0;
 }
 
+
 static struct snd_soc_ops omap3egf_ops = {
 	.hw_params = omap3egf_hw_params,
 };
 
 /* Digital audio interface glue - connects codec <--> CPU */
-static struct snd_soc_dai_link omap3egf_dai = {
-	.name = "TWL4030",
-	.stream_name = "TWL4030",
-	.cpu_dai_name = "omap-mcbsp-dai.1",
-	.platform_name = "omap-pcm-audio",
-	.codec_dai_name = "twl4030-hifi",
-	.codec_name = "twl4030-codec",
-	.ops = &omap3egf_ops,
+static struct snd_soc_dai_link omap3egf_dai[] = {
+	{
+		.name = "TWL4030",
+		.stream_name = "Line/Mic In",
+		.cpu_dai_name = "omap-mcbsp-dai.1",
+		.codec_dai_name = "twl4030-hifi",
+		.platform_name = "omap-pcm-audio",
+		.codec_name = "twl4030-codec",
+		.ops = &omap3egf_ops,
+	},
+	{
+		.name = "CS8406",
+		.stream_name = "HiFi Out",
+		.cpu_dai_name = "omap-mcbsp-dai.0",
+		.codec_dai_name = "twl4030-hifi",
+		.platform_name = "omap-pcm-audio",
+		.codec_name = "twl4030-codec",
+		.ops = &omap3egf_ops,
+	}
 };
 
-/* Audio machine driver */
-static struct snd_soc_card snd_soc_omap3egf = {
+/* SoC card */
+static struct snd_soc_card snd_soc_card_omap3egf = {
 	.name = "omap3egf",
-	.owner = THIS_MODULE,
-	.dai_link = &omap3egf_dai,
-	.num_links = 1,
+	.dai_link = omap3egf_dai,
+	.num_links = ARRAY_SIZE(omap3egf_dai),
 };
 
 static struct platform_device *omap3egf_snd_device;
@@ -116,37 +131,42 @@ static int __init omap3egf_soc_init(void)
 
 	if (!machine_is_omap3_egf())
 		return -ENODEV;
+
 	pr_info("OMAP3 egf SoC init\n");
 
+
 	omap3egf_snd_device = platform_device_alloc("soc-audio", -1);
-	if (!omap3egf_snd_device) {
-		printk(KERN_ERR "Platform device allocation failed\n");
-		return -ENOMEM;
+	if (omap3egf_snd_device == NULL) {
+		pr_err(PREFIX "Platform device allocation failed\n");
+		ret = -ENOMEM;
+		goto fail1;
 	}
 
-	platform_set_drvdata(omap3egf_snd_device, &snd_soc_omap3egf);
+	platform_set_drvdata(omap3egf_snd_device, &snd_soc_card_omap3egf);
 
 	ret = platform_device_add(omap3egf_snd_device);
-	if (ret)
-		goto err1;
+	if (ret) {
+		pr_err(PREFIX "Unable to add platform device\n");
+		goto fail2;
+	}
+
 
 	return 0;
 
-err1:
-	printk(KERN_ERR "Unable to add platform device\n");
+fail2:
 	platform_device_put(omap3egf_snd_device);
-
+fail1:
 	return ret;
 }
+module_init(omap3egf_soc_init);
 
 static void __exit omap3egf_soc_exit(void)
 {
+	regulator_put(omap3egf_dac_reg);
 	platform_device_unregister(omap3egf_snd_device);
 }
-
-module_init(omap3egf_soc_init);
 module_exit(omap3egf_soc_exit);
 
-MODULE_AUTHOR("Stefano Donati <stefano.donati@elettronicagf.it>");
-MODULE_DESCRIPTION("ALSA SoC for ElettronicaGF OMAP3 SOM board");
+MODULE_AUTHOR("Grazvydas Ignotas <notasas@gmail.com>");
+MODULE_DESCRIPTION("ALSA SoC OMAP3 Pandora");
 MODULE_LICENSE("GPL");
