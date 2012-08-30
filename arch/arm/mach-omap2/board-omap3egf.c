@@ -95,6 +95,7 @@
 #define IO_EXPANDER_nINT_GPIO	2 		//CPLD_EXP01_3V3
 #define IO_EXPANDER_nRST_GPIO	3 		//CPLD_EXP02_3V3
 #define IO_EXPANDER_BASE		266 	//the last of gpio_spi is 263
+#define HP_DET_IN_3V3_GPIO_MASK	(1<<3)
 static struct sx150x_platform_data __initdata sx1509_gpio_expander_data;
 #endif
 
@@ -194,6 +195,7 @@ static void __init egf_init_gpio_expander(void)
 	int ret;
 	sx1509_gpio_expander_data.irq_summary = -1; //gpio_to_irq(IO_EXPANDER_nINT_GPIO);
 	sx1509_gpio_expander_data.gpio_base = IO_EXPANDER_BASE;
+	sx1509_gpio_expander_data.io_pullup_ena = HP_DET_IN_3V3_GPIO_MASK;
 	ret = gpio_request(IO_EXPANDER_nRST_GPIO, "sx150x9_nreset");
 	if (ret) {
 		printk(KERN_ERR "failed to get sx150x9_nreset\n");
