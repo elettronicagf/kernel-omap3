@@ -102,6 +102,12 @@ static struct sx150x_platform_data __initdata sx1509_gpio_expander_data;
 #define PWR_P1_SW_EVENTS	0x10
 #define PWR_DEVOFF	(1<<0)
 
+
+#ifdef CONFIG_SENSORS_TMP102
+#define TMP102_I2C_BUSNUM		(2)
+#define TMP102_I2C_ADDR			(0x48)
+#endif
+
 /* WLAN */
 #ifdef CONFIG_WL12XX_PLATFORM_DATA
 
@@ -537,6 +543,11 @@ static struct i2c_board_info __initdata egf_i2c2_devices[] = {
        {
                I2C_BOARD_INFO("sx1509q", IO_EXPANDER_I2C_ADDR),
                .platform_data  = &sx1509_gpio_expander_data,
+       },
+#endif
+#ifdef CONFIG_SENSORS_TMP102
+       {
+    		   I2C_BOARD_INFO("tmp102", TMP102_I2C_ADDR),
        },
 #endif
 };
