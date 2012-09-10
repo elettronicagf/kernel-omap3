@@ -59,7 +59,7 @@
 #include <linux/gpio_spi.h>
 
 #define OMAP3_EGF_DISPLAY_ENABLE_GPIO			225
-#define OMAP3_EGF_LCD_3V3_ENABLE_GPIO 			2
+#define OMAP3_EGF_LCD_3V3_ENABLE_GPIO 			213
 
 /* EEPROM */
 #include <linux/i2c/at24.h>
@@ -359,6 +359,13 @@ static struct spi_board_info  egf_gpio_spi[] = {
     .chip_select	= 0,
     .mode = SPI_MODE_0,
   },
+	/* LCD BLC1097 */
+  {
+	.modalias	= "egf_blc1097",
+	.max_speed_hz	= 1000000, //1 MHz
+	.bus_num	= 1,
+	.chip_select	= 1,
+  },
 		/* TOUCHSCREEN */
 #if defined(CONFIG_TOUCHSCREEN_SX8652)
   {
@@ -378,7 +385,7 @@ static int lcd_set_backlight(struct omap_dss_device *dssdev, int level)
 {
 	unsigned char c;
 	u8 mux_pwm, enb_pwm;
-
+	printk(KERN_INFO "lcd_set_backlight %d\n",level);
 	if (level > 100)
 		return -1;
 
@@ -418,32 +425,32 @@ static int lcd_set_backlight(struct omap_dss_device *dssdev, int level)
 
 static int egf_enable_lcd(struct omap_dss_device *dssdev)
 {
-	gpio_set_value(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 1);
-	gpio_set_value(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 1);
+	gpio_direction_output(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 1);
+	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 1);
 
 	return 0;
 }
 
 static void egf_disable_lcd(struct omap_dss_device *dssdev)
 {
-	gpio_set_value(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 0);
-	gpio_set_value(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 0);
+	gpio_direction_output(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 0);
+	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 0);
 
 	return;
 }
 
 static int egf_enable_dvi(struct omap_dss_device *dssdev)
 {
-	if (gpio_is_valid(dssdev->reset_gpio))
-		gpio_set_value(dssdev->reset_gpio, 1);
+	gpio_direction_output(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 1);
+	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 1);
 
 	return 0;
 }
 
 static void egf_disable_dvi(struct omap_dss_device *dssdev)
 {
-	if (gpio_is_valid(dssdev->reset_gpio))
-		gpio_set_value(dssdev->reset_gpio, 0);
+	gpio_direction_output(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 0);
+	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 0);
 }
 
 static struct omap_dss_device egf_dvi_device = {
@@ -451,7 +458,7 @@ static struct omap_dss_device egf_dvi_device = {
 	.name = "dvi",
 	.driver_name = "generic_panel",
 	.phy.dpi.data_lines = 24,
-	.reset_gpio = OMAP3_EGF_DISPLAY_ENABLE_GPIO,
+	.reset_gpio = -EINVAL,
 	.platform_enable = egf_enable_dvi,
 	.platform_disable = egf_disable_dvi,
 };
@@ -459,14 +466,13 @@ static struct omap_dss_device egf_dvi_device = {
 static struct omap_dss_device egf_lcd_device = {
 	.type = OMAP_DISPLAY_TYPE_DPI,
 	.name = "lcd",
-	.driver_name = "egf_blc1089_ls_panel",
+	.driver_name = "panel-egf_blc1097",
 	.phy.dpi.data_lines = 24,
 	.platform_enable = egf_enable_lcd,
 	.platform_disable = egf_disable_lcd,
-	//.reset_gpio=213,
 	.max_backlight_level = 100,
 	.set_backlight = lcd_set_backlight,
-	.reset_gpio = OMAP3_EGF_DISPLAY_ENABLE_GPIO,
+	.reset_gpio = -EINVAL,
 };
 
 static struct omap_dss_device egf_tv_device = {
@@ -506,13 +512,13 @@ static void __init egf_display_init(void)
 {
 	int r;
 
-	r = gpio_request(egf_dvi_device.reset_gpio, "DVI reset");
+	r = gpio_request(OMAP3_EGF_DISPLAY_ENABLE_GPIO, "DVI reset");
 	if (r < 0) {
 		printk(KERN_ERR "Unable to get DVI reset GPIO\n");
 		return;
 	}
 
-	gpio_direction_output(egf_dvi_device.reset_gpio, 0);
+	gpio_direction_output(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 0);
 
 	r = gpio_request(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, "LCD 3V3 Enable");
 		if (r < 0) {
@@ -523,7 +529,7 @@ static void __init egf_display_init(void)
 	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 0);
 
 }
-
+subsys_initcall_sync(egf_display_init);
 /* EEPROM  */
 
 /* EEprom on SOM336 */
@@ -851,7 +857,7 @@ static void __init omap3_egf_init(void)
 	usb_musb_init(&musb_board_data);
 	usb_ehci_init(&ehci_pdata);
 	egf_ts_init();
-	egf_display_init();
+//	egf_display_init();
 	twl4030_poweroff_init();
 #ifdef CONFIG_VIDEO_TVP515X
 	egf_cam_init();

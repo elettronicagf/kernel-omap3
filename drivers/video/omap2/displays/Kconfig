@@ -21,6 +21,13 @@ config PANEL_EGF_BLC1089
         help
           LCD Panel used in TI eGF 377 BaseBoard
 
+config PANEL_EGF_BLC1097
+        tristate "Elettronica GF BLC1097 LCD Panel"
+        depends on OMAP2_DSS_DPI
+        select BACKLIGHT_CLASS_DEVICE
+        help
+          LCD Panel used in 396 Board
+
 config PANEL_SHARP_LQ043T1DG01
         tristate "Sharp LQ043T1DG01 LCD Panel"
         depends on OMAP2_DSS
