@@ -96,7 +96,6 @@ static void egf_blc1097_transfer(struct egf_blc1097_device *md, int cmd,
 	x = &xfer[0];
 
 	cmd &=  0xff;
-	cmd |= 0xAA00;
 	x->tx_buf = &cmd;
 	x->bits_per_word = 9;
 	x->len = 2;
@@ -191,101 +190,53 @@ static void set_display_state(struct egf_blc1097_device *md, int enabled)
 	egf_blc1097_cmd(md, cmd);
 }
 
+static void egf_panel_init(struct egf_blc1097_device *md){
+	int i;
+	static const struct {
+			int	cmd;
+			int	wlen;
+			u16	wbuf[9];
+		} *pcmd, init_cmds[22] = {
+			{ 0xC0, 4, { 0x0101, 0x0118, } },// D1=0x01  Accende Oscillatore D2=0x18 Imposta la Freq a 2.06MHz
+			{ 0x20, 0, },//Comando Inversione display
+			{ 0x29, 0, },//Comando Accensione display
+			{ 0x3A, 2, { 0x0160, } }, //COLMOD  18bits/pixel
+			{ 0xb1, 6, { 0x0186, 0x0118, 0x010C, } },
+			{ 0xb2, 4, { 0x0100, 0x01D8, } },
+			{ 0xb3, 2, { 0x0101, } },
+			{ 0xb4, 2, { 0x0104, } },
+			{ 0xb5, 10, { 0x0110,0x0130,0x0130,0x0100,0x0100, } },
+			{ 0xb6, 12, { 0x010b,0x010f,0x013c,0x0113,0x0113,0xe8 } },
+			{ 0xb7, 10, { 0x0146,0x0106,0x010c,0x0100,0x0100, } },
+			{ 0xc3, 10, { 0x0107,0x0103,0x0104,0x0104,0x0104, } },
+			{ 0xc4, 12, { 0x0112,0x0123,0x0112,0x0112,0x0101, 0x016D,} },
+			{ 0xc5, 2, { 0x0170, } },
+			{ 0xc6, 2, { 0x0144,0x0163,0x0103, } },
+			{ 0xd0, 18, { 0x0121,0x0143,0x0144,0x0125,0x0105,0x0101,0x0161,0x0116,0x0102,  } },
+			{ 0xd1, 18, { 0x0121,0x0143,0x0144,0x0125,0x0105,0x0101,0x0161,0x0116,0x0102,  } },
+			{ 0xd2, 18, { 0x0121,0x0143,0x0144,0x0125,0x0105,0x0101,0x0161,0x0116,0x0102,  } },
+			{ 0xd3, 18, { 0x0121,0x0143,0x0144,0x0125,0x0105,0x0101,0x0161,0x0116,0x0102,  } },
+			{ 0xd4, 18, { 0x0121,0x0143,0x0144,0x0125,0x0105,0x0101,0x0161,0x0116,0x0102,  } },
+			{ 0xd5, 18, { 0x0121,0x0143,0x0144,0x0125,0x0105,0x0101,0x0161,0x0116,0x0102,  } },
+			{ 0x3A, 2, { 0x0160, } }, //18 bits/pixel
+		};
+		pcmd = init_cmds;
+		for (i = 0; i < 22; i++, pcmd++)
+			egf_blc1097_transfer(md, pcmd->cmd, (u8 *)pcmd->wbuf, pcmd->wlen,NULL,0);
 
+		set_sleep_mode(md,0);
+		set_display_state(md,1);
+}
 
-//static int panel_detect(struct egf_blc1097_device *md)
-//{
-//	egf_blc1097_read(md, MIPID_CMD_READ_DISP_ID, md->display_id, 3);
-//	printk(KERN_INFO  "MIPI display ID: %02x%02x%02x\n",
-//		md->display_id[0], md->display_id[1], md->display_id[2]);
-//
-//	switch (md->display_id[0]) {
-//	case 0x10:
-//		md->model = MIPID_VER_egf_blc1097;
-//		md->name = "egf_blc1097";
-//		md->has_bc = 1;
-//		md->has_cabc = 1;
-//		break;
-//	case 0x29:
-//		md->model = MIPID_VER_L4F00311;
-//		md->name = "l4f00311";
-//		break;
-//	case 0x45:
-//		md->model = MIPID_VER_LPH8923;
-//		md->name = "lph8923";
-//		break;
-//	case 0x83:
-//		md->model = MIPID_VER_LS041Y3;
-//		md->name = "ls041y3";
-//		break;
-//	default:
-//		md->name = "unknown";
-//		dev_err(&md->spi->dev, "invalid display ID\n");
-//		return -ENODEV;
-//	}
-//
-//	md->revision = md->display_id[1];
-//
-//	dev_info(&md->spi->dev, "omapfb: %s rev %02x LCD detected\n",
-//			md->name, md->revision);
-//
-//	return 0;
-//}
-
-/*----------------------Backlight Control-------------------------*/
-
-//static void enable_backlight_ctrl(struct egf_blc1097_device *md, int enable)
-//{
-//	u16 ctrl;
-//
-//	egf_blc1097_read(md, MIPID_CMD_READ_CTRL_DISP, (u8 *)&ctrl, 1);
-//	if (enable) {
-//		ctrl |= CTRL_DISP_BRIGHTNESS_CTRL_ON |
-//			CTRL_DISP_BACKLIGHT_ON;
-//	} else {
-//		ctrl &= ~(CTRL_DISP_BRIGHTNESS_CTRL_ON |
-//			  CTRL_DISP_BACKLIGHT_ON);
-//	}
-//
-//	ctrl |= 1 << 8;
-//	egf_blc1097_write(md, MIPID_CMD_WRITE_CTRL_DISP, (u8 *)&ctrl, 2);
-//}
-
-
-//static void egf_blc1097_set_brightness(struct egf_blc1097_device *md, int level)
-//{
-//	int bv;
-//
-//	bv = level | (1 << 8);
-//	egf_blc1097_write(md, MIPID_CMD_WRITE_DISP_BRIGHTNESS, (u8 *)&bv, 2);
-//
-//	if (level)
-//		enable_backlight_ctrl(md, 1);
-//	else
-//		enable_backlight_ctrl(md, 0);
-//}
-//
-//static int egf_blc1097_get_actual_brightness(struct egf_blc1097_device *md)
-//{
-//	u8 bv;
-//
-//	egf_blc1097_read(md, MIPID_CMD_READ_DISP_BRIGHTNESS, &bv, 1);
-//
-//	return bv;
-//}
 
 
 static int egf_blc1097_bl_update_status(struct backlight_device *bl)
 {
 	struct omap_dss_device *dssdev = dev_get_drvdata(&bl->dev);
-	struct egf_blc1097_device *md = &egf_panel_dev;
 	int level;
-	u8 ctrl;
 	if (!dssdev->set_backlight)
 		return -EINVAL;
 
-	egf_blc1097_read(md, MIPID_CMD_RDDCOLMOD, (u8 *)&ctrl, 1);
-	printk(KERN_INFO  "MIPID_CMD_RDDCOLMOD: %02x\n",ctrl);
 
 	if (bl->props.fb_blank == FB_BLANK_UNBLANK &&
 			bl->props.power == FB_BLANK_UNBLANK)
@@ -318,48 +269,37 @@ static int egf_panel_get_recommended_bpp(struct omap_dss_device *dssdev)
 }
 
 static struct omap_video_timings egf_panel_timings = {
-	.x_res		= 800,
-	.y_res		= 480,
+	.x_res		= 480,
+	.y_res		= 800,
 	.pixel_clock	= 24000,
 	.hfp		= 28,
 	.hsw		= 4,
 	.hbp		= 24,
 	.vfp		= 3,
 	.vsw		= 3,
-	.vbp		= 4,
+	.vbp		= 12,
 };
+
+#define MIPID_CMD_OSCSET	0xC0
 
 static int egf_panel_probe(struct omap_dss_device *dssdev)
 {
 	int r;
 	struct egf_blc1097_device *md = &egf_panel_dev;
 	struct backlight_device *bldev;
-//	int max_brightness, brightness;
 	struct backlight_properties props;
 
 	printk(KERN_INFO  "%s\n", __func__);
-	dssdev->panel.config = OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
-					OMAP_DSS_LCD_IHS;
-	/* FIXME AC bias ? */
+
+	dssdev->panel.config = OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS | OMAP_DSS_LCD_IPC |OMAP_DSS_LCD_IHS;
 	dssdev->panel.timings = egf_panel_timings;
 
 	if (dssdev->platform_enable)
 		dssdev->platform_enable(dssdev);
-	/*
-	 * After reset we have to wait 5 msec before the first
-	 * command can be sent.
-	 */
-	msleep(5);
+
+	egf_panel_init(md);
 
 	md->enabled = 1;
-
-//	r = panel_detect(md);
-//	if (r) {
-//		printk(KERN_INFO  "%s panel detect error\n", __func__);
-//		if (!md->enabled && dssdev->platform_disable)
-//			dssdev->platform_disable(dssdev);
-//		return r;
-//	}
 
 	mutex_lock(&egf_panel_dev.mutex);
 	egf_panel_dev.dssdev = dssdev;
@@ -368,21 +308,17 @@ static int egf_panel_probe(struct omap_dss_device *dssdev)
 
 	/*------- Backlight control --------*/
 
+	props.max_brightness = dssdev->max_backlight_level;
 	props.fb_blank = FB_BLANK_UNBLANK;
 	props.power = FB_BLANK_UNBLANK;
-
 	bldev =  backlight_device_register("egf_blc1097_bl", &dssdev->dev, dssdev,
 			&egf_blc1097_bl_ops, &props);
 
 	md->bl_dev = bldev;
-
-	bldev->props.fb_blank = FB_BLANK_UNBLANK;
-	bldev->props.power = FB_BLANK_UNBLANK;
-	bldev->props.brightness = dssdev->max_backlight_level;
+	md->bl_dev->props.brightness = dssdev->max_backlight_level;
 	r = egf_blc1097_bl_update_status(bldev);
 	if (r < 0)
 		printk(KERN_INFO  "failed to set lcd brightness\n");
-
 	return 0;
 }
 
@@ -423,19 +359,8 @@ static int egf_panel_power_on(struct omap_dss_device *dssdev)
 		if (r)
 			goto fail;
 	}
+	egf_panel_init(md);
 
-//	if (md->enabled) {
-//		printk(KERN_INFO  "panel already enabled\n");
-//		mutex_unlock(&md->mutex);
-//		return 0;
-//	}
-
-//	set_sleep_mode(md, 0);
-//	md->enabled = 1;
-//
-//	/* 5msec between sleep out and the next command. (8.2.16) */
-//	msleep(5);
-	set_display_state(md, 1);
 
 	mutex_unlock(&md->mutex);
 
@@ -571,7 +496,7 @@ static int egf_blc1097_spi_probe(struct spi_device *spi)
 
 	printk(KERN_INFO  "%s\n", __func__);
 
-	spi->mode = SPI_MODE_3;
+	spi->mode = SPI_MODE_0;
 	md->spi = spi;
 	mutex_init(&md->mutex);
 	dev_set_drvdata(&spi->dev, md);

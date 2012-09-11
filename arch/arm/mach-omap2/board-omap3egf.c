@@ -48,6 +48,7 @@
 #include <plat/gpmc.h>
 #include <plat/nand.h>
 #include <plat/usb.h>
+#include <plat/mcspi.h>
 
 #include "mux.h"
 #include "hsmmc.h"
@@ -349,6 +350,10 @@ static void __init egf_ts_init(void)
 #define TWL_LED_PWMON	0x0
 #define TWL_LED_PWMOFF	0x1
 
+static struct omap2_mcspi_device_config mipid_mcspi_config = {
+	.turbo_mode	= 0,
+	.single_channel	= 1,
+};
 
 static struct spi_board_info  egf_gpio_spi[] = {
 		/* GPIO SPI EXPANDER CPLD */
@@ -365,6 +370,7 @@ static struct spi_board_info  egf_gpio_spi[] = {
 	.max_speed_hz	= 1000000, //1 MHz
 	.bus_num	= 1,
 	.chip_select	= 1,
+	.controller_data	= &mipid_mcspi_config,
   },
 		/* TOUCHSCREEN */
 #if defined(CONFIG_TOUCHSCREEN_SX8652)
@@ -508,14 +514,14 @@ static struct regulator_consumer_supply egf_vdac_supply =
 static struct regulator_consumer_supply egf_vdvi_supply =
 	REGULATOR_SUPPLY("vdds_dsi", "omapdss");
 
-static void __init egf_display_init(void)
+static int __init egf_display_init(void)
 {
 	int r;
 
 	r = gpio_request(OMAP3_EGF_DISPLAY_ENABLE_GPIO, "DVI reset");
 	if (r < 0) {
 		printk(KERN_ERR "Unable to get DVI reset GPIO\n");
-		return;
+		return -1;
 	}
 
 	gpio_direction_output(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 0);
@@ -523,10 +529,11 @@ static void __init egf_display_init(void)
 	r = gpio_request(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, "LCD 3V3 Enable");
 		if (r < 0) {
 			printk(KERN_ERR "Unable to get LCD 3V3 Enable GPIO\n");
-			return;
+			return -1;
 		}
 
 	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 0);
+	return 0;
 
 }
 subsys_initcall_sync(egf_display_init);
