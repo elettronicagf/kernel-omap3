@@ -34,6 +34,8 @@
 
 #include <plat/display.h>
 
+#define MIPID_CMD_RDDPM			0x0A
+#define MIPID_CMD_RDDCOLMOD		0x0C
 #define MIPID_CMD_SLEEP_IN		0x10
 #define MIPID_CMD_SLEEP_OUT		0x11
 #define MIPID_CMD_DISP_OFF		0x28
@@ -62,9 +64,6 @@ struct egf_blc1097_device {
 	int		model;
 	int		revision;
 	u8		display_id[3];
-//	unsigned	has_bc:1;
-	unsigned	has_cabc:1;
-	unsigned	cabc_mode;
 	unsigned long	hw_guard_end;		/* next value of jiffies
 						   when we can issue the
 						   next sleep in/out command */
@@ -77,7 +76,7 @@ struct egf_blc1097_device {
 	struct backlight_device *bl_dev;
 };
 
-static struct egf_blc1097_device acx_dev;
+static struct egf_blc1097_device egf_panel_dev;
 static int egf_blc1097_bl_update_status(struct backlight_device *dev);
 
 /*--------------------MIPID interface-----------------------------*/
@@ -97,11 +96,12 @@ static void egf_blc1097_transfer(struct egf_blc1097_device *md, int cmd,
 	x = &xfer[0];
 
 	cmd &=  0xff;
+	cmd |= 0xAA00;
 	x->tx_buf = &cmd;
 	x->bits_per_word = 9;
 	x->len = 2;
 
-	if (rlen > 1 && wlen == 0) {
+	if (rlen >= 1 && wlen == 0) {
 		/*
 		 * Between the command and the response data there is a
 		 * dummy clock cycle. Add an extra bit after the command
@@ -251,32 +251,6 @@ static void set_display_state(struct egf_blc1097_device *md, int enabled)
 //	egf_blc1097_write(md, MIPID_CMD_WRITE_CTRL_DISP, (u8 *)&ctrl, 2);
 //}
 
-static void set_cabc_mode(struct egf_blc1097_device *md, unsigned mode)
-{
-	u16 cabc_ctrl;
-
-	md->cabc_mode = mode;
-	if (!md->enabled)
-		return;
-	cabc_ctrl = 0;
-	egf_blc1097_read(md, MIPID_CMD_READ_CABC, (u8 *)&cabc_ctrl, 1);
-	cabc_ctrl &= ~3;
-	cabc_ctrl |= (1 << 8) | (mode & 3);
-	egf_blc1097_write(md, MIPID_CMD_WRITE_CABC, (u8 *)&cabc_ctrl, 2);
-}
-
-static unsigned get_cabc_mode(struct egf_blc1097_device *md)
-{
-	return md->cabc_mode;
-}
-
-static unsigned get_hw_cabc_mode(struct egf_blc1097_device *md)
-{
-	u8 cabc_ctrl;
-
-	egf_blc1097_read(md, MIPID_CMD_READ_CABC, &cabc_ctrl, 1);
-	return cabc_ctrl & 3;
-}
 
 //static void egf_blc1097_set_brightness(struct egf_blc1097_device *md, int level)
 //{
@@ -303,35 +277,15 @@ static unsigned get_hw_cabc_mode(struct egf_blc1097_device *md)
 
 static int egf_blc1097_bl_update_status(struct backlight_device *bl)
 {
-	/*struct egf_blc1097_device *md = dev_get_drvdata(&dev->dev);
-	int r;
-	int level;
-
-	printk(KERN_INFO  "%s\n", __func__);
-
-	mutex_lock(&md->mutex);
-
-	if (dev->props.fb_blank == FB_BLANK_UNBLANK &&
-			dev->props.power == FB_BLANK_UNBLANK)
-		level = dev->props.brightness;
-	else
-		level = 0;
-
-	r = 0;
-	if (md->has_bc)
-		egf_blc1097_set_brightness(md, level);
-	else if (md->dssdev->set_backlight)
-		r = md->dssdev->set_backlight(md->dssdev, level);
-	else
-		r = -ENODEV;
-
-	mutex_unlock(&md->mutex);
-
-	return r; */
 	struct omap_dss_device *dssdev = dev_get_drvdata(&bl->dev);
+	struct egf_blc1097_device *md = &egf_panel_dev;
 	int level;
+	u8 ctrl;
 	if (!dssdev->set_backlight)
 		return -EINVAL;
+
+	egf_blc1097_read(md, MIPID_CMD_RDDCOLMOD, (u8 *)&ctrl, 1);
+	printk(KERN_INFO  "MIPID_CMD_RDDCOLMOD: %02x\n",ctrl);
 
 	if (bl->props.fb_blank == FB_BLANK_UNBLANK &&
 			bl->props.power == FB_BLANK_UNBLANK)
@@ -344,22 +298,6 @@ static int egf_blc1097_bl_update_status(struct backlight_device *bl)
 
 static int egf_blc1097_bl_get_intensity(struct backlight_device *bl)
 {
-	/*struct egf_blc1097_device *md = dev_get_drvdata(&dev->dev);
-
-	printk(KERN_INFO  "%s\n", __func__);
-
-	if (!md->has_bc && md->dssdev->set_backlight == NULL)
-		return -ENODEV;
-
-	if (dev->props.fb_blank == FB_BLANK_UNBLANK &&
-			dev->props.power == FB_BLANK_UNBLANK) {
-		if (md->has_bc)
-			return egf_blc1097_get_actual_brightness(md);
-		else
-			return dev->props.brightness;
-	}
-
-	return 0; */
 	if (bl->props.fb_blank == FB_BLANK_UNBLANK &&
 				bl->props.power == FB_BLANK_UNBLANK)
 			return bl->props.brightness;
@@ -372,110 +310,11 @@ static const struct backlight_ops egf_blc1097_bl_ops = {
 	.update_status  = egf_blc1097_bl_update_status,
 };
 
-/*--------------------Auto Brightness control via Sysfs---------------------*/
 
-static const char *cabc_modes[] = {
-	"off",		/* always used when CABC is not supported */
-	"ui",
-	"still-image",
-	"moving-image",
-};
 
-static ssize_t show_cabc_mode(struct device *dev,
-		struct device_attribute *attr,
-		char *buf)
+static int egf_panel_get_recommended_bpp(struct omap_dss_device *dssdev)
 {
-	struct egf_blc1097_device *md = dev_get_drvdata(dev);
-	const char *mode_str;
-	int mode;
-	int len;
-
-	if (!md->has_cabc)
-		mode = 0;
-	else
-		mode = get_cabc_mode(md);
-	mode_str = "unknown";
-	if (mode >= 0 && mode < ARRAY_SIZE(cabc_modes))
-		mode_str = cabc_modes[mode];
-	len = snprintf(buf, PAGE_SIZE, "%s\n", mode_str);
-
-	return len < PAGE_SIZE - 1 ? len : PAGE_SIZE - 1;
-}
-
-static ssize_t store_cabc_mode(struct device *dev,
-		struct device_attribute *attr,
-		const char *buf, size_t count)
-{
-	struct egf_blc1097_device *md = dev_get_drvdata(dev);
-	int i;
-
-	for (i = 0; i < ARRAY_SIZE(cabc_modes); i++) {
-		const char *mode_str = cabc_modes[i];
-		int cmp_len = strlen(mode_str);
-
-		if (count > 0 && buf[count - 1] == '\n')
-			count--;
-		if (count != cmp_len)
-			continue;
-
-		if (strncmp(buf, mode_str, cmp_len) == 0)
-			break;
-	}
-
-	if (i == ARRAY_SIZE(cabc_modes))
-		return -EINVAL;
-
-	if (!md->has_cabc && i != 0)
-		return -EINVAL;
-
-	mutex_lock(&md->mutex);
-	set_cabc_mode(md, i);
-	mutex_unlock(&md->mutex);
-
-	return count;
-}
-
-static ssize_t show_cabc_available_modes(struct device *dev,
-		struct device_attribute *attr,
-		char *buf)
-{
-	struct egf_blc1097_device *md = dev_get_drvdata(dev);
-	int len;
-	int i;
-
-	if (!md->has_cabc)
-		return snprintf(buf, PAGE_SIZE, "%s\n", cabc_modes[0]);
-
-	for (i = 0, len = 0;
-	     len < PAGE_SIZE && i < ARRAY_SIZE(cabc_modes); i++)
-		len += snprintf(&buf[len], PAGE_SIZE - len, "%s%s%s",
-			i ? " " : "", cabc_modes[i],
-			i == ARRAY_SIZE(cabc_modes) - 1 ? "\n" : "");
-
-	return len < PAGE_SIZE ? len : PAGE_SIZE - 1;
-}
-
-static DEVICE_ATTR(cabc_mode, S_IRUGO | S_IWUSR,
-		show_cabc_mode, store_cabc_mode);
-static DEVICE_ATTR(cabc_available_modes, S_IRUGO,
-		show_cabc_available_modes, NULL);
-
-static struct attribute *bldev_attrs[] = {
-	&dev_attr_cabc_mode.attr,
-	&dev_attr_cabc_available_modes.attr,
-	NULL,
-};
-
-static struct attribute_group bldev_attr_group = {
-	.attrs = bldev_attrs,
-};
-
-
-/*---------------------------ACX Panel----------------------------*/
-
-static int acx_get_recommended_bpp(struct omap_dss_device *dssdev)
-{
-	return 16;
+	return 18;
 }
 
 static struct omap_video_timings egf_panel_timings = {
@@ -493,12 +332,12 @@ static struct omap_video_timings egf_panel_timings = {
 static int egf_panel_probe(struct omap_dss_device *dssdev)
 {
 	int r;
-	struct egf_blc1097_device *md = &acx_dev;
+	struct egf_blc1097_device *md = &egf_panel_dev;
 	struct backlight_device *bldev;
 //	int max_brightness, brightness;
 	struct backlight_properties props;
 
-	printk(KERN_INFO  "%s  dssdev=%0x\n", __func__,dssdev);
+	printk(KERN_INFO  "%s\n", __func__);
 	dssdev->panel.config = OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS |
 					OMAP_DSS_LCD_IHS;
 	/* FIXME AC bias ? */
@@ -522,9 +361,9 @@ static int egf_panel_probe(struct omap_dss_device *dssdev)
 //		return r;
 //	}
 
-	mutex_lock(&acx_dev.mutex);
-	acx_dev.dssdev = dssdev;
-	mutex_unlock(&acx_dev.mutex);
+	mutex_lock(&egf_panel_dev.mutex);
+	egf_panel_dev.dssdev = dssdev;
+	mutex_unlock(&egf_panel_dev.mutex);
 
 
 	/*------- Backlight control --------*/
@@ -549,61 +388,53 @@ static int egf_panel_probe(struct omap_dss_device *dssdev)
 
 static void egf_panel_remove(struct omap_dss_device *dssdev)
 {
-	struct egf_blc1097_device *md = &acx_dev;
+	struct egf_blc1097_device *md = &egf_panel_dev;
 
 	printk(KERN_INFO  "%s\n", __func__);
-	sysfs_remove_group(&md->bl_dev->dev.kobj, &bldev_attr_group);
 	backlight_device_unregister(md->bl_dev);
-	mutex_lock(&acx_dev.mutex);
-	acx_dev.dssdev = NULL;
-	mutex_unlock(&acx_dev.mutex);
+	mutex_lock(&egf_panel_dev.mutex);
+	egf_panel_dev.dssdev = NULL;
+	mutex_unlock(&egf_panel_dev.mutex);
 }
 
 static int egf_panel_power_on(struct omap_dss_device *dssdev)
 {
-	struct egf_blc1097_device *md = &acx_dev;
+	struct egf_blc1097_device *md = &egf_panel_dev;
 	int r;
 
-	printk(KERN_INFO  "%s  dssdev=%0x\n", __func__,dssdev);
+	printk(KERN_INFO  "%s\n", __func__);
 
 	if (dssdev->state == OMAP_DSS_DISPLAY_ACTIVE)
 		return 0;
 
-	printk(KERN_INFO  "%s 1\n", __func__);
 	mutex_lock(&md->mutex);
 
-	printk(KERN_INFO  "%s 2  dssdev=%x\n", __func__,dssdev);
 	r = omapdss_dpi_display_enable(dssdev);
 	if (r) {
 		pr_err("%s dpi enable failed\n", __func__);
 		goto fail_unlock;
 	}
 
-	/*FIXME tweak me */
-	msleep(50);
+//	/*FIXME tweak me */
+//	msleep(50);
 
-	printk(KERN_INFO  "%s 3\n", __func__);
 	if (dssdev->platform_enable) {
 		r = dssdev->platform_enable(dssdev);
 		if (r)
 			goto fail;
 	}
 
-	printk(KERN_INFO  "%s 4\n", __func__);
-	if (md->enabled) {
-		printk(KERN_INFO  "panel already enabled\n");
-		mutex_unlock(&md->mutex);
-		return 0;
-	}
+//	if (md->enabled) {
+//		printk(KERN_INFO  "panel already enabled\n");
+//		mutex_unlock(&md->mutex);
+//		return 0;
+//	}
 
-	printk(KERN_INFO  "%s 5\n", __func__);
-	set_sleep_mode(md, 0);
-	md->enabled = 1;
-
-	printk(KERN_INFO  "%s 6\n", __func__);
-	/* 5msec between sleep out and the next command. (8.2.16) */
-	msleep(5);
-	printk(KERN_INFO  "%s 7\n", __func__);
+//	set_sleep_mode(md, 0);
+//	md->enabled = 1;
+//
+//	/* 5msec between sleep out and the next command. (8.2.16) */
+//	msleep(5);
 	set_display_state(md, 1);
 
 	mutex_unlock(&md->mutex);
@@ -618,7 +449,7 @@ fail_unlock:
 
 static void egf_panel_power_off(struct omap_dss_device *dssdev)
 {
-	struct egf_blc1097_device *md = &acx_dev;
+	struct egf_blc1097_device *md = &egf_panel_dev;
 
 	printk(KERN_INFO  "%s\n", __func__);
 
@@ -656,7 +487,6 @@ static void egf_panel_power_off(struct omap_dss_device *dssdev)
 static int egf_panel_enable(struct omap_dss_device *dssdev)
 {
 	int r;
-	printk(KERN_INFO  "%s  dssdev=%0x\n", __func__,dssdev);
 
 	r = egf_panel_power_on(dssdev);
 
@@ -669,14 +499,12 @@ static int egf_panel_enable(struct omap_dss_device *dssdev)
 
 static void egf_panel_disable(struct omap_dss_device *dssdev)
 {
-	printk(KERN_INFO  "%s  dssdev=%0x\n", __func__,dssdev);
 	egf_panel_power_off(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_DISABLED;
 }
 
 static int egf_panel_suspend(struct omap_dss_device *dssdev)
 {
-	printk(KERN_INFO  "%s  dssdev=%0x\n", __func__,dssdev);
 	egf_panel_power_off(dssdev);
 	dssdev->state = OMAP_DSS_DISPLAY_SUSPENDED;
 	return 0;
@@ -727,7 +555,7 @@ static struct omap_dss_driver egf_panel_driver = {
 	.get_timings	= egf_panel_get_timings,
 	.check_timings	= egf_panel_check_timings,
 
-	.get_recommended_bpp = acx_get_recommended_bpp,
+	.get_recommended_bpp = egf_panel_get_recommended_bpp,
 
 	.driver         = {
 		.name   = "panel-egf_blc1097",
@@ -739,7 +567,7 @@ static struct omap_dss_driver egf_panel_driver = {
 
 static int egf_blc1097_spi_probe(struct spi_device *spi)
 {
-	struct egf_blc1097_device *md = &acx_dev;
+	struct egf_blc1097_device *md = &egf_panel_dev;
 
 	printk(KERN_INFO  "%s\n", __func__);
 
