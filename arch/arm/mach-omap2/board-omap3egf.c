@@ -65,7 +65,7 @@
 /* EEPROM */
 #include <linux/i2c/at24.h>
 #define EEPROM_ON_MODULE_I2C_ADDR 0x50
-#define EEPROM_ON_BOARD_I2C_ADDR  0x56
+#define EEPROM_ON_BOARD_I2C_ADDR  0x52
 
 
 /* TVP5151 */
@@ -431,32 +431,32 @@ static int lcd_set_backlight(struct omap_dss_device *dssdev, int level)
 
 static int egf_enable_lcd(struct omap_dss_device *dssdev)
 {
-	gpio_direction_output(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 1);
-	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 1);
+	gpio_set_value_cansleep(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 1);
+	gpio_set_value_cansleep(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 1);
 
 	return 0;
 }
 
 static void egf_disable_lcd(struct omap_dss_device *dssdev)
 {
-	gpio_direction_output(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 0);
-	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 0);
+	gpio_set_value_cansleep(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 0);
+	gpio_set_value_cansleep(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 0);
 
 	return;
 }
 
 static int egf_enable_dvi(struct omap_dss_device *dssdev)
 {
-	gpio_direction_output(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 1);
-	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 1);
+	gpio_set_value_cansleep(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 1);
+	gpio_set_value_cansleep(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 1);
 
 	return 0;
 }
 
 static void egf_disable_dvi(struct omap_dss_device *dssdev)
 {
-	gpio_direction_output(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 0);
-	gpio_direction_output(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 0);
+	gpio_set_value_cansleep(OMAP3_EGF_DISPLAY_ENABLE_GPIO, 0);
+	gpio_set_value_cansleep(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, 0);
 }
 
 static struct omap_dss_device egf_dvi_device = {
@@ -563,14 +563,11 @@ static struct i2c_board_info __initdata egf_i2c2_devices[] = {
     		   I2C_BOARD_INFO("tmp102", TMP102_I2C_ADDR),
        },
 #endif
-};
-
-/* EEprom on JSF0377 */
-static struct i2c_board_info __initdata egf_i2c_eeprom_on_board[] = {
        {
                I2C_BOARD_INFO("24c04", EEPROM_ON_BOARD_I2C_ADDR),
        },
 };
+
 
 #include "sdram-micron-mt46h32m32lf-6.h"
 
@@ -791,7 +788,7 @@ static int __init omap3_egf_i2c_init(void)
 
 	/* Bus 2 is used for Camera/Sensor interface */
 	omap_register_i2c_bus(2, 400, egf_i2c2_devices , ARRAY_SIZE(egf_i2c2_devices));
-	omap_register_i2c_bus(3, 400, egf_i2c_eeprom_on_board, ARRAY_SIZE(egf_i2c_eeprom_on_board));
+	//omap_register_i2c_bus(3, 400, egf_i2c_eeprom_on_board, ARRAY_SIZE(egf_i2c_eeprom_on_board));
 
 
 	return 0;
