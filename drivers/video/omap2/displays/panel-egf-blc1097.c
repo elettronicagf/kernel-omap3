@@ -34,29 +34,12 @@
 
 #include <plat/display.h>
 
-#define MIPID_CMD_RDDPM			0x0A
-#define MIPID_CMD_RDDCOLMOD		0x0C
 #define MIPID_CMD_SLEEP_IN		0x10
 #define MIPID_CMD_SLEEP_OUT		0x11
 #define MIPID_CMD_DISP_OFF		0x28
 #define MIPID_CMD_DISP_ON		0x29
-#define MIPID_CMD_WRITE_DISP_BRIGHTNESS	0x51
-#define MIPID_CMD_READ_DISP_BRIGHTNESS	0x52
-#define MIPID_CMD_WRITE_CTRL_DISP	0x53
 
-#define CTRL_DISP_BRIGHTNESS_CTRL_ON	(1 << 5)
-#define CTRL_DISP_AMBIENT_LIGHT_CTRL_ON	(1 << 4)
-#define CTRL_DISP_BACKLIGHT_ON		(1 << 2)
-#define CTRL_DISP_AUTO_BRIGHTNESS_ON	(1 << 1)
 
-#define MIPID_CMD_READ_CTRL_DISP	0x54
-#define MIPID_CMD_WRITE_CABC		0x55
-#define MIPID_CMD_READ_CABC		0x56
-
-#define MIPID_VER_LPH8923		3
-#define MIPID_VER_LS041Y3		4
-#define MIPID_VER_L4F00311		8
-#define MIPID_VER_egf_blc1097		9
 
 struct egf_blc1097_device {
 	char		*name;
@@ -128,7 +111,7 @@ static void egf_blc1097_transfer(struct egf_blc1097_device *md, int cmd,
 
 	r = spi_sync(md->spi, &m);
 	if (r < 0)
-		printk(KERN_INFO  "spi_sync %d\n", r);
+		printk(KERN_DEBUG   "spi_sync %d\n", r);
 }
 
 static inline void egf_blc1097_cmd(struct egf_blc1097_device *md, int cmd)
@@ -265,7 +248,7 @@ static const struct backlight_ops egf_blc1097_bl_ops = {
 
 static int egf_panel_get_recommended_bpp(struct omap_dss_device *dssdev)
 {
-	return 18;
+	return 24;
 }
 
 static struct omap_video_timings egf_panel_timings = {
@@ -289,7 +272,7 @@ static int egf_panel_probe(struct omap_dss_device *dssdev)
 	struct backlight_device *bldev;
 	struct backlight_properties props;
 
-	printk(KERN_INFO  "%s\n", __func__);
+	printk(KERN_DEBUG   "%s\n", __func__);
 
 	dssdev->panel.config = OMAP_DSS_LCD_TFT | OMAP_DSS_LCD_IVS | OMAP_DSS_LCD_IPC |OMAP_DSS_LCD_IHS;
 	dssdev->panel.timings = egf_panel_timings;
@@ -318,7 +301,7 @@ static int egf_panel_probe(struct omap_dss_device *dssdev)
 	md->bl_dev->props.brightness = dssdev->max_backlight_level;
 	r = egf_blc1097_bl_update_status(bldev);
 	if (r < 0)
-		printk(KERN_INFO  "failed to set lcd brightness\n");
+		printk(KERN_DEBUG   "failed to set lcd brightness\n");
 	return 0;
 }
 
@@ -326,7 +309,7 @@ static void egf_panel_remove(struct omap_dss_device *dssdev)
 {
 	struct egf_blc1097_device *md = &egf_panel_dev;
 
-	printk(KERN_INFO  "%s\n", __func__);
+	printk(KERN_DEBUG   "%s\n", __func__);
 	backlight_device_unregister(md->bl_dev);
 	mutex_lock(&egf_panel_dev.mutex);
 	egf_panel_dev.dssdev = NULL;
@@ -338,7 +321,7 @@ static int egf_panel_power_on(struct omap_dss_device *dssdev)
 	struct egf_blc1097_device *md = &egf_panel_dev;
 	int r;
 
-	printk(KERN_INFO  "%s\n", __func__);
+	printk(KERN_DEBUG   "%s\n", __func__);
 
 	if (dssdev->state == OMAP_DSS_DISPLAY_ACTIVE)
 		return 0;
@@ -351,14 +334,15 @@ static int egf_panel_power_on(struct omap_dss_device *dssdev)
 		goto fail_unlock;
 	}
 
-//	/*FIXME tweak me */
-//	msleep(50);
 
 	if (dssdev->platform_enable) {
 		r = dssdev->platform_enable(dssdev);
 		if (r)
 			goto fail;
 	}
+
+	msleep(100);
+
 	egf_panel_init(md);
 
 
@@ -376,7 +360,7 @@ static void egf_panel_power_off(struct omap_dss_device *dssdev)
 {
 	struct egf_blc1097_device *md = &egf_panel_dev;
 
-	printk(KERN_INFO  "%s\n", __func__);
+	printk(KERN_DEBUG   "%s\n", __func__);
 
 	if (dssdev->state != OMAP_DSS_DISPLAY_ACTIVE)
 		return;
@@ -439,7 +423,7 @@ static int egf_panel_resume(struct omap_dss_device *dssdev)
 {
 	int r;
 
-	printk(KERN_INFO  "%s\n", __func__);
+	printk(KERN_DEBUG   "%s\n", __func__);
 	r = egf_panel_power_on(dssdev);
 	if (r)
 		return r;
@@ -494,7 +478,7 @@ static int egf_blc1097_spi_probe(struct spi_device *spi)
 {
 	struct egf_blc1097_device *md = &egf_panel_dev;
 
-	printk(KERN_INFO  "%s\n", __func__);
+	printk(KERN_DEBUG   "%s\n", __func__);
 
 	spi->mode = SPI_MODE_0;
 	md->spi = spi;
@@ -510,7 +494,7 @@ static int egf_blc1097_spi_remove(struct spi_device *spi)
 {
 //	struct egf_blc1097_device *md = dev_get_drvdata(&spi->dev);
 
-	printk(KERN_INFO  "%s\n", __func__);
+	printk(KERN_DEBUG   "%s\n", __func__);
 	omap_dss_unregister_driver(&egf_panel_driver);
 
 	return 0;
