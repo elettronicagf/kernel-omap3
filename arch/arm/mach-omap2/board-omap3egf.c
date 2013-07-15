@@ -129,6 +129,11 @@ static struct panel_generic_dpi_data dvi_panel = {
 static struct omap_dss_device egf_dvi_device = {
 	.type = OMAP_DISPLAY_TYPE_DPI,
 	.name = "dvi",
+	.clocks	= {
+			.dispc	= {
+				.dispc_fclk_src	= OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DISPC,
+			},
+		},
 	.driver_name = "generic_dpi_panel",
 	.data = &dvi_panel,
 	.phy.dpi.data_lines = 24,
