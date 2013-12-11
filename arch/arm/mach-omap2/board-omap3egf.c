@@ -529,7 +529,7 @@ static struct at24_platform_data at24c64 = {
 };
 
 
-static struct i2c_board_info __initdata egf_i2c_eeprom_on_module[] = {
+static struct i2c_board_info __initdata egf_i2c2_devices[] = {
        {
                I2C_BOARD_INFO("24c64", EEPROM_ON_MODULE_I2C_ADDR),
                .platform_data  = &at24c64,
@@ -537,11 +537,12 @@ static struct i2c_board_info __initdata egf_i2c_eeprom_on_module[] = {
 };
 
 /* EEprom on JSF0377 */
-static struct i2c_board_info __initdata egf_i2c_eeprom_on_board[] = {
+static struct i2c_board_info __initdata egf_i2c3_devices[] = {
        {
                I2C_BOARD_INFO("24c04", EEPROM_ON_BOARD_I2C_ADDR),
        },
 };
+
 
 #include "sdram-micron-mt46h32m32lf-6.h"
 
@@ -736,7 +737,7 @@ static struct twl4030_platform_data egf_twldata = {
 	.keypad		= &omap3egf_kp_data,
 };
 
-static struct i2c_board_info __initdata egf_i2c_boardinfo[] = {
+static struct i2c_board_info __initdata egf_i2c1_devices[] = {
 	{
 		I2C_BOARD_INFO("twl4030", 0x48),
 		.flags = I2C_CLIENT_WAKE,
@@ -747,12 +748,12 @@ static struct i2c_board_info __initdata egf_i2c_boardinfo[] = {
 
 static int __init omap3_egf_i2c_init(void)
 {
-	omap_register_i2c_bus(1, 2600, egf_i2c_boardinfo,
-			ARRAY_SIZE(egf_i2c_boardinfo));
+	omap_register_i2c_bus(1, 2600, egf_i2c1_devices,
+			ARRAY_SIZE(egf_i2c1_devices));
 
 	/* Bus 2 is used for Camera/Sensor interface */
-	omap_register_i2c_bus(2, 400, egf_i2c_eeprom_on_module, ARRAY_SIZE(egf_i2c_eeprom_on_module));
-	omap_register_i2c_bus(3, 400, egf_i2c_eeprom_on_board, ARRAY_SIZE(egf_i2c_eeprom_on_board));
+	omap_register_i2c_bus(2, 400, egf_i2c2_devices, ARRAY_SIZE(egf_i2c2_devices));
+	omap_register_i2c_bus(3, 400, egf_i2c3_devices, ARRAY_SIZE(egf_i2c3_devices));
 
 
 	return 0;
