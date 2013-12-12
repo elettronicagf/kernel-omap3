@@ -116,6 +116,11 @@
 #define GPIO_DEBUG_LED_RED		264
 #define GPIO_DEBUG_LED_YELLOW	265
 #define GPIO_DEBUG_LED_BLUE		266
+#define GPIO_LED_1				272
+#define GPIO_LED_2				273
+#define GPIO_LED_3				274
+#define GPIO_LED_4				275
+#define GPIO_LED_5				276
 
  struct egf_som {
  	__u32 rev_code;
@@ -191,6 +196,36 @@ static struct gpio_led gpio_leds[] = {
  			 .default_trigger = "none",
  			 .active_low = 0,
  			 .gpio = GPIO_DEBUG_LED_RED,
+ 		},
+ 		{
+ 			 .name = "LED-1",
+ 			 .default_trigger = "none",
+ 			 .active_low = 1,
+ 			 .gpio = GPIO_LED_1,
+ 		},
+ 		{
+ 			 .name = "LED-2",
+ 			 .default_trigger = "none",
+ 			 .active_low = 1,
+ 			 .gpio = GPIO_LED_2,
+ 		},
+ 		{
+ 			 .name = "LED-3",
+ 			 .default_trigger = "none",
+ 			 .active_low = 1,
+ 			 .gpio = GPIO_LED_3,
+ 		},
+ 		{
+ 			 .name = "LED-4",
+ 			 .default_trigger = "none",
+ 			 .active_low = 1,
+ 			 .gpio = GPIO_LED_4,
+ 		},
+ 		{
+ 			 .name = "LED-5",
+ 			 .default_trigger = "none",
+ 			 .active_low = 1,
+ 			 .gpio = GPIO_LED_5,
  		},
 };
 
