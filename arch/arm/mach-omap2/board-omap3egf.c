@@ -53,7 +53,7 @@
 #include "pm.h"
 #include "common-board-devices.h"
 #include "sdram-micron-mt46h32m32lf-6.h"
-
+#include "control.h"
 #define OMAP3_EGF_DISPLAY_ENABLE_GPIO			140
 #define OMAP3_EGF_COR_nPD_TFP410 				142
 #define OMAP3_EGF_COR_RESET_TFP410 			143
@@ -129,11 +129,11 @@ static struct panel_generic_dpi_data dvi_panel = {
 static struct omap_dss_device egf_dvi_device = {
 	.type = OMAP_DISPLAY_TYPE_DPI,
 	.name = "dvi",
-	.clocks	= {
-			.dispc	= {
-				.dispc_fclk_src	= OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DISPC,
-			},
-		},
+//	.clocks	= {
+//			.dispc	= {
+//				.dispc_fclk_src	= OMAP_DSS_CLK_SRC_DSI_PLL_HSDIV_DISPC,
+//			},
+//		},
 	.driver_name = "generic_dpi_panel",
 	.data = &dvi_panel,
 	.phy.dpi.data_lines = 24,
@@ -156,7 +156,7 @@ static struct omap_dss_board_info egf_dss_data = {
 static void __init egf_display_init(void)
 {
 	int r;
-
+	unsigned int prog_io;
 	r = gpio_request_one(OMAP3_EGF_DISPLAY_ENABLE_GPIO, GPIOF_OUT_INIT_HIGH, "Display Enable");
 	if (r < 0)
 		printk(KERN_ERR "Unable to get Display Enable GPIO\n");
@@ -178,8 +178,9 @@ static void __init egf_display_init(void)
 		printk(KERN_ERR "Unable to get OMAP3_EGF_I2C3_SDA_GPIO_185\n");
 
 
-
-
+	prog_io = omap_ctrl_readl(OMAP343X_CONTROL_PROG_IO1);
+	prog_io &= 0xF0FFFFFF; /* Setup slew rate to reduce noise in VGA output */
+	omap_ctrl_writel(prog_io, OMAP343X_CONTROL_PROG_IO1);
 
 
 
