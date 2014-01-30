@@ -399,7 +399,11 @@ static int lcd_set_backlight(struct omap_dss_device *dssdev, int level)
 					enb_pwm, TWL_INTBR_GPBR1);
 	}
 
-	c = ((128 * (100 - level)) / 100) + 1;
+	if (level == 100)
+		c = 0x7F;
+	else
+		c = ((128 * (100 - level)) / 100) + 1;
+
 	twl_i2c_write_u8(TWL4030_MODULE_PWM1, 0x7F, TWL_LED_PWMOFF);
 	twl_i2c_write_u8(TWL4030_MODULE_PWM1, c, TWL_LED_PWMON);
 
