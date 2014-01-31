@@ -454,7 +454,7 @@ static struct omap_dss_device egf_dvi_device = {
 static struct omap_dss_device egf_lcd_device = {
 	.type = OMAP_DISPLAY_TYPE_DPI,
 	.name = "lcd",
-	.driver_name = "egf_blc1089_ls_panel",
+	.driver_name = "egf_tx20d26vm0aaa_ls_panel",
 	.phy.dpi.data_lines = 24,
 	.platform_enable = egf_enable_lcd,
 	.platform_disable = egf_disable_lcd,
@@ -480,7 +480,7 @@ static struct omap_dss_device *egf_dss_devices[] = {
 static struct omap_dss_board_info egf_dss_data = {
 	.num_devices = ARRAY_SIZE(egf_dss_devices),
 	.devices = egf_dss_devices,
-	.default_device = &egf_dvi_device,
+	.default_device = &egf_lcd_device,
 };
 
 static struct platform_device egf_dss_device = {
