@@ -91,7 +91,6 @@
 #define PWR_P1_SW_EVENTS	0x10
 #define PWR_DEVOFF	(1<<0)
 
-
 /* SOM REVISIONS */
 #define REV_STR_TO_REV_CODE(REV_STRING) \
 	(\
@@ -112,6 +111,11 @@
 #define REV_336_F01  SOM_REV_CODE(336,'F',1)
 #define REV_336_F02  SOM_REV_CODE(336,'F',2)
 #define SOM_REVISION_LEN  12  /* termination character included. ex: JSC0336_A02*/
+
+
+#define GPIO_DEBUG_LED_RED		264
+#define GPIO_DEBUG_LED_YELLOW	265
+#define GPIO_DEBUG_LED_BLUE		266
 
  struct egf_som {
  	__u32 rev_code;
@@ -169,6 +173,39 @@
 
  }
 
+static struct gpio_led gpio_leds[] = {
+ 		{
+ 			 .name = "DEBUG-LED-BLUE",
+ 			 .default_trigger = "heartbeat",
+ 			 .active_low = 0,
+ 			 .gpio = GPIO_DEBUG_LED_BLUE,
+ 		},
+ 		{
+ 			 .name = "DEBUG-LED-YELLOW",
+ 			 .default_trigger = "none",
+ 			 .active_low = 0,
+ 			 .gpio = GPIO_DEBUG_LED_YELLOW,
+ 		},
+ 		{
+ 			 .name = "DEBUG-LED-RED",
+ 			 .default_trigger = "none",
+ 			 .active_low = 0,
+ 			 .gpio = GPIO_DEBUG_LED_RED,
+ 		},
+};
+
+static struct gpio_led_platform_data gpio_led_info = {
+		.leds = gpio_leds,
+		.num_leds = ARRAY_SIZE(gpio_leds),
+};
+
+static struct platform_device leds_gpio = {
+	.name = "leds-gpio",
+	.id = -1,
+	.dev = {
+			.platform_data = &gpio_led_info,
+	},
+};
 
 
 static void twl4030_poweroff(void)
@@ -838,6 +875,7 @@ static void __init omap3_egf_init(void)
 	egf_ts_init();
 	egf_display_init();
 	twl4030_poweroff_init();
+	platform_device_register(&leds_gpio);
 #ifdef CONFIG_VIDEO_TVP515X
 	if(the_som.has_tvp5150)
 		egf_cam_init();
