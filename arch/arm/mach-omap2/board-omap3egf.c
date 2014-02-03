@@ -63,7 +63,7 @@
 /* EEPROM */
 #include <linux/i2c/at24.h>
 #define EEPROM_ON_MODULE_I2C_ADDR 0x50
-#define EEPROM_ON_BOARD_I2C_ADDR  0x56
+#define EEPROM_ON_BOARD_I2C_ADDR  0x54
 
 
 /* TVP5151 */
@@ -542,7 +542,7 @@ static struct i2c_board_info __initdata egf_i2c2_devices[] = {
 
 static struct i2c_board_info __initdata egf_i2c3_devices[] = {
        {
-               I2C_BOARD_INFO("24c04", EEPROM_ON_BOARD_I2C_ADDR),
+               I2C_BOARD_INFO("24c128", EEPROM_ON_BOARD_I2C_ADDR),
        },
        {
                I2C_BOARD_INFO("sx1509q", 0x70),
