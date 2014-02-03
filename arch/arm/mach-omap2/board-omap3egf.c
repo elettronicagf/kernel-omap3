@@ -55,6 +55,8 @@
 #include <linux/spi/spi.h>
 #include <linux/gpio_spi.h>
 
+#include <linux/i2c/sx150x.h>
+
 #define OMAP3_EGF_DISPLAY_ENABLE_GPIO			213
 #define OMAP3_EGF_LCD_3V3_ENABLE_GPIO 			2
 
@@ -528,6 +530,7 @@ static struct at24_platform_data at24c64 = {
      .page_size      = 32,
 };
 
+static struct sx150x_platform_data __initdata sx1509_gpio_expander_onboard_data;
 
 static struct i2c_board_info __initdata egf_i2c2_devices[] = {
        {
@@ -536,12 +539,22 @@ static struct i2c_board_info __initdata egf_i2c2_devices[] = {
        },
 };
 
-/* EEprom on JSF0377 */
+
 static struct i2c_board_info __initdata egf_i2c3_devices[] = {
        {
                I2C_BOARD_INFO("24c04", EEPROM_ON_BOARD_I2C_ADDR),
        },
+       {
+               I2C_BOARD_INFO("sx1509q", 0x70),
+               .platform_data = &sx1509_gpio_expander_onboard_data,
+       },
 };
+
+static void __init init_gpio_expander(void)
+{
+	sx1509_gpio_expander_onboard_data.irq_summary = -1;
+	sx1509_gpio_expander_onboard_data.gpio_base = 264;
+}
 
 
 #include "sdram-micron-mt46h32m32lf-6.h"
@@ -748,13 +761,10 @@ static struct i2c_board_info __initdata egf_i2c1_devices[] = {
 
 static int __init omap3_egf_i2c_init(void)
 {
-	omap_register_i2c_bus(1, 2600, egf_i2c1_devices,
-			ARRAY_SIZE(egf_i2c1_devices));
-
-	/* Bus 2 is used for Camera/Sensor interface */
+	init_gpio_expander();
+	omap_register_i2c_bus(1, 2600, egf_i2c1_devices,ARRAY_SIZE(egf_i2c1_devices));
 	omap_register_i2c_bus(2, 400, egf_i2c2_devices, ARRAY_SIZE(egf_i2c2_devices));
 	omap_register_i2c_bus(3, 400, egf_i2c3_devices, ARRAY_SIZE(egf_i2c3_devices));
-
 
 	return 0;
 }
