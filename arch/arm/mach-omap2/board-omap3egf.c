@@ -542,7 +542,7 @@ static struct omap_dss_device egf_tv_device = {
 	.name = "tv",
 	.driver_name = "venc",
 	.type = OMAP_DISPLAY_TYPE_VENC,
-	.phy.venc.type = OMAP_DSS_VENC_TYPE_SVIDEO,
+	.phy.venc.type = OMAP_DSS_VENC_TYPE_COMPOSITE,
 };
 
 static struct omap_dss_device *egf_dss_devices[] = {
