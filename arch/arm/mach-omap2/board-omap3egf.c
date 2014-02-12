@@ -435,6 +435,13 @@ static struct spi_board_info  egf_gpio_spi[] = {
     .platform_data = &sx_info,
   },
 #endif
+  {
+	.modalias	= "spidev",
+	.max_speed_hz	= 1000000, //1 MHz
+	.bus_num	= 1,
+	.chip_select	= 1,
+	.mode = SPI_MODE_0,
+  },
 };
 
 
