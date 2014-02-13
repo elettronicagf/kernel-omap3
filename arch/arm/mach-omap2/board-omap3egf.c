@@ -72,6 +72,8 @@
 #define OMAP3EGF_SMSC911X_CS	5
 #define OMAP3EGF_ETHR_GPIO_RST	64
 
+#define MMC1_GPIO_WP	23
+
 #include <plat/gpmc-smsc911x.h>
 
 static struct omap_smsc911x_platform_data smsc911x_cfg = {
@@ -204,7 +206,7 @@ static struct omap2_hsmmc_info mmc[] = {
 	{
 		.mmc		= 1,
 		.caps		= MMC_CAP_4_BIT_DATA,
-		.gpio_wp	= -EINVAL,
+		.gpio_wp	= MMC1_GPIO_WP,
 	},
 /*
 	{
