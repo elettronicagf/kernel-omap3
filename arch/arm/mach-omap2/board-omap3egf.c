@@ -630,6 +630,9 @@ static struct i2c_board_info __initdata egf_i2c3_devices[] = {
        {
     		   I2C_BOARD_INFO("tmp102", 0x49),
         },
+       {
+    		   I2C_BOARD_INFO("ads1015", 0x48),
+       },
 };
 
 static void __init init_gpio_expander(void)

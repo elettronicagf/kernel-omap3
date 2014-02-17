@@ -1,0 +1,31 @@
+Kernel driver ads1015
+=====================
+
+Supported chips:
+  * Texas Instruments ADS1015
+    Prefix: 'ads1015'
+    Addresses scanned: I2C 0x48, 0x49, 0x4a, 0x4b
+    Datasheet: Publicly available at the Texas Instruments website :
+               http://focus.ti.com/lit/ds/symlink/ads1015.pdf
+
+Authors:
+        Dirk Eibach, Guntermann & Drunck GmbH <eibach@gdsys.de>
+
+Description
+-----------
+
+This driver implements support for the Texas Instruments ADS1015.
+
+This device is a 12-bit A-D converter with 4 inputs.
+
+The inputs can be used single ended or in certain differential combinations.
+
+The driver offers access to all available combinations by 7 "virtual" inputs:
+in0: Voltage over AIN0 and AIN1.
+in1: Voltage over AIN0 and AIN3.
+in2: Voltage over AIN1 and AIN3.
+in3: Voltage over AIN2 and AIN3.
+in4: Voltage over AIN0 and GND.
+in5: Voltage over AIN1 and GND.
+in6: Voltage over AIN2 and GND.
+in7: Voltage over AIN3 and GND.
