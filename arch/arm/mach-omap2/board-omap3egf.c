@@ -794,20 +794,30 @@ static struct twl4030_madc_platform_data egf_madc_data = {
 
 static uint32_t board_keymap[] = {
 	KEY(0, 0, KEY_F1),
-	KEY(0, 1, KEY_UP),
-	KEY(0, 2, KEY_ENTER),
-
-	KEY(1, 0, KEY_F2),
-	KEY(1, 1, KEY_DOWN),
-	KEY(1, 3, KEY_VOLUMEUP),
-
-	KEY(2, 0, KEY_F3),
-	KEY(2, 1, KEY_LEFT),
-	KEY(2, 3, KEY_VOLUMEDOWN),
-
-	KEY(3, 0, KEY_F4),
-	KEY(3, 1, KEY_RIGHT),
-	KEY(3, 3, KEY_POWER),
+	KEY(0, 1, KEY_F2),
+	KEY(0, 2, KEY_F3),
+	KEY(0, 3, KEY_F4),
+	KEY(0, 4, KEY_F5),
+	KEY(1, 0, KEY_F6),
+	KEY(1, 1, KEY_F7),
+	KEY(1, 2, KEY_F8),
+	KEY(1, 3, KEY_F9),
+	KEY(1, 4, KEY_F10),
+	KEY(2, 0, KEY_F11),
+	KEY(2, 1, KEY_F12),
+	KEY(2, 2, KEY_F13),
+	KEY(2, 3, KEY_F14),
+	KEY(2, 4, KEY_F15),
+	KEY(3, 0, KEY_F16),
+	KEY(3, 1, KEY_F17),
+	KEY(3, 2, KEY_F18),
+	KEY(3, 3, KEY_F19),
+	KEY(3, 4, KEY_F20),
+	KEY(4, 0, KEY_F21),
+	KEY(4, 1, KEY_F22),
+	KEY(4, 2, KEY_F23),
+	KEY(4, 3, KEY_F24),
+	KEY(4, 4, KEY_KP0),
 };
 
 static struct matrix_keymap_data board_map_data = {
@@ -817,8 +827,8 @@ static struct matrix_keymap_data board_map_data = {
 
 static struct twl4030_keypad_data omap3egf_kp_data = {
 	.keymap_data	= &board_map_data,
-	.rows		= 4,
-	.cols		= 4,
+	.rows		= 5,
+	.cols		= 5,
 	.rep		= 1,
 };
 
