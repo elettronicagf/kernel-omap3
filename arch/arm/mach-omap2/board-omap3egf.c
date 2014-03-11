@@ -832,7 +832,7 @@ static struct twl4030_keypad_data omap3egf_kp_data = {
 	.keymap_data	= &board_map_data,
 	.rows		= 5,
 	.cols		= 5,
-	.rep		= 1,
+	.rep		= 0,
 };
 
 static struct twl4030_platform_data egf_twldata = {
