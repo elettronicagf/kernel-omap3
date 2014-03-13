@@ -259,6 +259,7 @@ static irqreturn_t do_kp_irq(int irq, void *_kp)
 	u8 reg;
 	int ret;
 
+	disable_irq_nosync(irq);
 	/* Read & Clear TWL4030 pending interrupt */
 	ret = twl4030_kpread(kp, &reg, KEYP_ISR1, 1);
 
@@ -269,6 +270,7 @@ static irqreturn_t do_kp_irq(int irq, void *_kp)
 	else
 		twl4030_kp_scan(kp, true);
 
+	enable_irq(irq);
 	return IRQ_HANDLED;
 }
 
