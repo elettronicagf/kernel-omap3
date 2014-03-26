@@ -28,6 +28,13 @@ config PANEL_EGF_TX20D26VM0AAA
         help
           LCD Panel used in 0458 Board
 
+config PANEL_EGF_AM800600J1TMQW
+        tristate "AM800600J1TMQW LCD Panel"
+        depends on OMAP2_DSS_DPI
+        select BACKLIGHT_CLASS_DEVICE
+        help
+          AlternativeLCD Panel used in 0458 Board
+
 config PANEL_SHARP_LQ043T1DG01
         tristate "Sharp LQ043T1DG01 LCD Panel"
         depends on OMAP2_DSS
