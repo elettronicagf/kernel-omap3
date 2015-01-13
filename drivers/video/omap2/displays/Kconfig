@@ -35,6 +35,13 @@ config PANEL_EGF_AM800600J1TMQW
         help
           AlternativeLCD Panel used in 0458 Board
 
+config PANEL_EGF_13080SMTB00A0S
+        tristate "13-080SMTB00A0-S LCD Panel"
+        depends on OMAP2_DSS_DPI
+        select BACKLIGHT_CLASS_DEVICE
+        help
+          Alternative LCD Panel used in 0458 Board
+
 config PANEL_SHARP_LQ043T1DG01
         tristate "Sharp LQ043T1DG01 LCD Panel"
         depends on OMAP2_DSS

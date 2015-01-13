@@ -5,7 +5,9 @@ obj-$(CONFIG_PANEL_SHARP_LQ043T1DG01) += panel-sharp-lq043t1dg01.o
 obj-$(CONFIG_PANEL_EGF_BLC1089) += panel-egf-blc1089.o
 obj-$(CONFIG_PANEL_EGF_TX20D26VM0AAA) += panel-egf-tx20d26vm0aaa.o
 obj-$(CONFIG_PANEL_EGF_AM800600J1TMQW) += panel-egf-am800600j1tmqwb0h.o
+obj-$(CONFIG_PANEL_EGF_13080SMTB00A0S) += panel-egf-13-080smtb00a0-s.o
 obj-$(CONFIG_PANEL_TAAL) += panel-taal.o
 obj-$(CONFIG_PANEL_TOPPOLY_TDO35S) += panel-toppoly-tdo35s.o
 obj-$(CONFIG_PANEL_TPO_TD043MTEA1) += panel-tpo-td043mtea1.o
 obj-$(CONFIG_PANEL_ACX565AKM) += panel-acx565akm.o
+
