@@ -58,7 +58,7 @@
 #include <linux/i2c/sx150x.h>
 
 #define OMAP3_EGF_DISPLAY_ENABLE_GPIO			213
-#define OMAP3_EGF_LCD_3V3_ENABLE_GPIO 			2
+#define OMAP3_EGF_LCD_3V3_ENABLE_GPIO 			70
 
 /* EEPROM */
 #include <linux/i2c/at24.h>
@@ -510,30 +510,6 @@ static void egf_disable_lcd(struct omap_dss_device *dssdev)
 	return;
 }
 
-static int egf_enable_dvi(struct omap_dss_device *dssdev)
-{
-	if (gpio_is_valid(dssdev->reset_gpio))
-		gpio_set_value(dssdev->reset_gpio, 1);
-
-	return 0;
-}
-
-static void egf_disable_dvi(struct omap_dss_device *dssdev)
-{
-	if (gpio_is_valid(dssdev->reset_gpio))
-		gpio_set_value(dssdev->reset_gpio, 0);
-}
-
-static struct omap_dss_device egf_dvi_device = {
-	.type = OMAP_DISPLAY_TYPE_DPI,
-	.name = "dvi",
-	.driver_name = "generic_panel",
-	.phy.dpi.data_lines = 24,
-	.reset_gpio = OMAP3_EGF_DISPLAY_ENABLE_GPIO,
-	.platform_enable = egf_enable_dvi,
-	.platform_disable = egf_disable_dvi,
-};
-
 static struct omap_dss_device egf_lcd_device = {
 	.type = OMAP_DISPLAY_TYPE_DPI,
 	.name = "lcd",
@@ -547,17 +523,9 @@ static struct omap_dss_device egf_lcd_device = {
 	.reset_gpio = OMAP3_EGF_DISPLAY_ENABLE_GPIO,
 };
 
-static struct omap_dss_device egf_tv_device = {
-	.name = "tv",
-	.driver_name = "venc",
-	.type = OMAP_DISPLAY_TYPE_VENC,
-	.phy.venc.type = OMAP_DSS_VENC_TYPE_COMPOSITE,
-};
 
 static struct omap_dss_device *egf_dss_devices[] = {
 	&egf_lcd_device,
-	&egf_dvi_device,
-	&egf_tv_device,
 };
 
 static struct omap_dss_board_info egf_dss_data = {
@@ -583,14 +551,6 @@ static struct regulator_consumer_supply egf_vdvi_supply =
 static void __init egf_display_init(void)
 {
 	int r;
-
-	r = gpio_request(egf_dvi_device.reset_gpio, "DVI reset");
-	if (r < 0) {
-		printk(KERN_ERR "Unable to get DVI reset GPIO\n");
-		return;
-	}
-
-	gpio_direction_output(egf_dvi_device.reset_gpio, 0);
 
 	r = gpio_request(OMAP3_EGF_LCD_3V3_ENABLE_GPIO, "LCD 3V3 Enable");
 		if (r < 0) {
