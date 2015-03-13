@@ -663,8 +663,8 @@ static int __init at24_init(void)
 	io_limit = rounddown_pow_of_two(io_limit);
 	return i2c_add_driver(&at24_driver);
 }
-module_init(at24_init);
-
+//module_init(at24_init);
+subsys_initcall(at24_init);
 static void __exit at24_exit(void)
 {
 	i2c_del_driver(&at24_driver);

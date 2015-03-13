@@ -62,6 +62,8 @@
 
 /* EEPROM */
 #include <linux/i2c/at24.h>
+#include "gf_eeprom_port.h"
+#include "gf_eeprom.h"
 #define EEPROM_ON_MODULE_I2C_ADDR 0x50
 #define EEPROM_ON_BOARD_I2C_ADDR  0x54
 
@@ -87,31 +89,11 @@
 #include <linux/spi/sx8652.h>
 #endif
 
-
 #define PWR_P1_SW_EVENTS	0x10
 #define PWR_DEVOFF	(1<<0)
 
-/* SOM REVISIONS */
-#define REV_STR_TO_REV_CODE(REV_STRING) \
-	(\
-	(((REV_STRING[3]-'0')*1000 + (REV_STRING[4]-'0')*100+(REV_STRING[5]-'0')*10 + (REV_STRING[6]-'0')) << 16)|\
-	((REV_STRING[8]-'A') << 8)|\
-	((REV_STRING[9]-'0')*10 + (REV_STRING[10]-'0'))\
-	)
-
-#define SOM_REV_CODE(REV1,REV2,REV3)\
-	((REV1<<16) | ((REV2-'A') << 8) |  REV3)
-
-#define REV_NOT_PROGRAMMED  SOM_REV_CODE(((0xFF-'0')*1000 + (0xFF-'0')*100+(0xFF-'0')*10 + 0xff-'0'),'A',0xFF)
-#define REV_336_A01  SOM_REV_CODE(336,'A',1)
-#define REV_336_B01  SOM_REV_CODE(336,'B',1)
-#define REV_336_C01  SOM_REV_CODE(336,'C',1)
-#define REV_336_D01  SOM_REV_CODE(336,'D',1)
-#define REV_336_E01  SOM_REV_CODE(336,'E',1)
-#define REV_336_F01  SOM_REV_CODE(336,'F',1)
-#define REV_336_F02  SOM_REV_CODE(336,'F',2)
-#define REV_336_H01  SOM_REV_CODE(336,'H',2)
-#define SOM_REVISION_LEN  12  /* termination character included. ex: JSC0336_A02*/
+#define REV_WID0336_AA0100 "WID0336_AA01.00"
+#define REV_WID0336_AB0100 "WID0336_AB01.00"
 
 
 #define GPIO_DEBUG_LED_RED		264
@@ -124,60 +106,19 @@
 #define GPIO_LED_5				276
 
  struct egf_som {
- 	__u32 rev_code;
  	int has_tvp5150;
  };
  struct egf_som the_som;
 
+ int gf_strcmp(const char * cs, const char * ct) {
+ 	register signed char __res;
 
- static int load_som_revision(int som_rev_code)
- {
  	while (1) {
- 		the_som.rev_code = som_rev_code;
- 		switch (the_som.rev_code) {
- 		case REV_336_A01:
- 		case REV_336_B01:
- 		case REV_336_C01:
- 		case REV_336_D01:
- 		case REV_336_E01:
-		case REV_336_H01:
- 			the_som.has_tvp5150 = 1;
- 			return 0;
- 		case REV_336_F01:
- 			the_som.has_tvp5150 = 0;
- 			return 0;
- 		case REV_336_F02:
- 			the_som.has_tvp5150 = 0;
- 			return 0;
- 		case REV_NOT_PROGRAMMED:
- 		default:
- 			the_som.has_tvp5150 = 0;
- 			printk(KERN_ERR "somrev not supported!\n");
- 		}
+ 		if ((__res = *cs - *ct++) != 0 || !*cs++)
+ 			break;
  	}
- 	return 0;
- }
- static void __init fixup_egf_board(struct machine_desc *desc,
- 		struct tag *tags, char **cmdline, struct meminfo *mi)
- {
-	struct tag *t;
-	char *str;
-	char *str_som_rev;
 
-	for_each_tag(t, tags) {
-		if (t->hdr.tag == ATAG_CMDLINE) {
-			str = t->u.cmdline.cmdline;
-			str = strstr(str, "somrev=");
-			if (str != NULL) {
-				str_som_rev = str + 7;
-				printk(KERN_INFO "SOM REV:%s\n",str_som_rev);
-				load_som_revision(REV_STR_TO_REV_CODE(str_som_rev));
-			}else
-				printk(KERN_ERR "Somrev boot param missing!\n");
-			break;
-		}
-	}
-
+ 	return __res;
  }
 
 static struct gpio_led gpio_leds[] = {
@@ -523,7 +464,6 @@ static struct omap_dss_device egf_lcd_device = {
 	.reset_gpio = OMAP3_EGF_DISPLAY_ENABLE_GPIO,
 };
 
-
 static struct omap_dss_device *egf_dss_devices[] = {
 	&egf_lcd_device,
 };
@@ -569,6 +509,7 @@ static struct at24_platform_data at24c64 = {
      .byte_len       = SZ_64K / 8,
      .flags			 = AT24_FLAG_ADDR16,
      .page_size      = 32,
+     .setup		= load_eeprom_content,
 };
 
 static struct sx150x_platform_data __initdata sx1509_gpio_expander_onboard_data;
@@ -881,6 +822,39 @@ static struct omap_musb_board_data musb_board_data = {
 	.power			= 100,
 };
 
+static int __devinit omap3_egf_revision_init(void)
+{
+	char * egf_sw_id_code;
+	gf_load_som_revision(&egf_sw_id_code,1);
+	if(!gf_strcmp(egf_sw_id_code,REV_WID0336_AA0100))
+	{
+		/* SW Revision is WID0336_AA01.00 */
+		printk(KERN_INFO "EGF SW ID Code: WID0336_AA01.00\n");
+		the_som.has_tvp5150 = 1;
+	}
+	else if(!gf_strcmp(egf_sw_id_code,REV_WID0336_AB0100))
+	{
+		/* SW Revision is WID0336_AB01.00 */
+		printk(KERN_INFO "EGF SW ID Code: WID0336_AB01.00\n");
+		the_som.has_tvp5150 = 0;
+	}
+	else {
+		printk(KERN_INFO "Unrecognized EGF SW ID Code: %s\n",egf_sw_id_code);
+		printk(KERN_INFO "System Hang.\n");
+		while(1);
+	}
+
+	egf_ts_init();
+	egf_display_init();
+
+#ifdef CONFIG_VIDEO_TVP515X
+	if(the_som.has_tvp5150)
+		egf_cam_init();
+#endif
+
+	return 0;
+}
+
 static void __init omap3_egf_init(void)
 {
 	if (cpu_is_omap3630()){
@@ -896,23 +870,18 @@ static void __init omap3_egf_init(void)
 			ARRAY_SIZE(omap3_egf_devices));
 	omap_serial_init();
 
-
 	usb_musb_init(&musb_board_data);
 	usb_ehci_init(&ehci_pdata);
-	egf_ts_init();
-	egf_display_init();
+
 	twl4030_poweroff_init();
 	platform_device_register(&leds_gpio);
-#ifdef CONFIG_VIDEO_TVP515X
-	if(the_som.has_tvp5150)
-		egf_cam_init();
-#endif
+
 }
+device_initcall(omap3_egf_revision_init);
 
 MACHINE_START(OMAP3_EGF, "OMAP3 EGF")
 	/* Maintainer: Andrea Collamati - http://www.elettronicagf.it */
 	.boot_params= 0x80000100,
-	.fixup		= fixup_egf_board,
 	.map_io		= omap3_map_io,
 	.reserve	= omap_reserve,
 	.init_irq	= omap3_egf_init_irq,
